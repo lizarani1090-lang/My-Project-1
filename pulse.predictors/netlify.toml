@@ -1,0 +1,56 @@
+[build]
+  publish = "."
+
+[build.processing]
+  skip_processing = true
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/login"
+  to = "/.netlify/functions/login"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/logout"
+  to = "/.netlify/functions/logout"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/session"
+  to = "/.netlify/functions/session"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/triage"
+  to = "/.netlify/functions/triage"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/stock"
+  to = "/.netlify/functions/stock"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/referrals"
+  to = "/.netlify/functions/referrals"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/consultations"
+  to = "/.netlify/functions/consultations"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/"
+  to = "/login.html"
+  status = 200
+  force = true

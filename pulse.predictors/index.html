@@ -1,0 +1,2656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Rural healthcare access and quality platform connecting patients, ASHA workers, doctors, and facilities through a coordinated healthcare experience.">
+<meta property="og:title" content="Pulse Predictor">
+<meta property="og:description" content="Rural healthcare access and quality platform connecting patients, ASHA workers, doctors, and facilities through a coordinated healthcare experience.">
+<title>Pulse Predictor</title>
+
+<!-- Progressive Web App (PWA) & Browser Favicons -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0F766E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PulseHealth">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          canvas: '#FAF7F2',
+          border: '#E6DFD1',
+          ink: '#0F172A',
+          asha: { DEFAULT: '#0F766E', dark: '#115E59', light: '#CCFBF1' },
+          doctor: { DEFAULT: '#0284C7', dark: '#0369A1', light: '#E0F2FE' },
+          facility: { DEFAULT: '#D97706', dark: '#B45309', light: '#FEF3C7' },
+          patient: { DEFAULT: '#6366F1', dark: '#4F46E5', light: '#EEF2FF' },
+          danger: { DEFAULT: '#DC2626', light: '#FEE2E2' },
+          warning: { DEFAULT: '#D97706', light: '#FEF3C7' }
+        }
+      }
+    }
+  }
+</script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="auth-pending">
+
+<div class="app-container" id="appContainer">
+
+  <!-- ==================== HEADER (SECURE WORKPLACE SHELL) ==================== -->
+  <header class="glass-header sticky top-0 z-50">
+    <div class="flex justify-between items-center w-full">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="relative w-9 h-9 shrink-0 flex items-center justify-center">
+          <img src="logo.jpeg" alt="Pulse Predictor Logo" id="headerLogoImg" class="w-9 h-9 rounded-xl object-cover border-2 border-emerald-500 shadow-sm" onerror="this.onerror=null;this.src='icon.svg';">
+          <span id="headerLogoDot" class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <h1 class="font-bold text-dark leading-tight text-sm sm:text-base truncate">Pulse Predictor</h1>
+            <span id="headerWorkplaceBadge" class="bg-emerald-50 text-asha border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+              <i class="fa-solid fa-circle text-[6px] text-emerald-500"></i>
+              <span id="headerWorkplaceText">ASHA Workplace</span>
+            </span>
+          </div>
+          <p id="headerSubText" class="text-[10px] text-gray-500 font-medium truncate">Sunita Devi · Sub-Centre 4</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <!-- PWA In-App Install Button -->
+        <button id="pwaInstallBtn" onclick="handlePWAInstall()" class="pwa-install-btn touch-target" title="Install application on phone">
+          <i class="fa-solid fa-cloud-arrow-down"></i>
+          <span>Install App</span>
+        </button>
+
+        <!-- Language Selector -->
+        <select id="languageSelector" onchange="setLanguage(this.value)" aria-label="Choose language" class="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-1.5 rounded-lg border border-gray-200 focus:outline-none cursor-pointer">
+          <option value="en">EN</option>
+          <option value="hi">हिन्दी</option>
+          <option value="mr">मराठी</option>
+        </select>
+
+        <!-- Network Connectivity Toggle -->
+        <button onclick="toggleConnectivity()" id="connectivityBtn" class="flex items-center px-2 py-1.5 rounded-lg bg-green-100 text-green-700 border border-green-200 touch-target" title="Toggle simulated network connectivity">
+          <i class="fa-solid fa-wifi" id="wifiIcon"></i>
+        </button>
+
+        <!-- Switch Workplace Button (Requires Login to Change) -->
+        <button onclick="switchWorkplace()" class="bg-red-50 hover:bg-red-100 text-danger border border-red-200 text-xs font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 touch-target transition-colors" title="Log out of this workplace and sign into another portal">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span class="hidden sm:inline">Switch Workplace</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Loading Screen while verifying session -->
+  <div id="appLoadingScreen" class="flex flex-col items-center justify-center min-h-[50vh] text-center p-6">
+    <div class="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
+    <p class="text-sm font-bold text-gray-800">Verifying secure workplace session...</p>
+    <p class="text-xs text-gray-500 mt-1">Authenticating role credentials with Pulse Predictor network</p>
+  </div>
+
+  <!-- Offline Connectivity Banner with Outbox Sync Counter & Conflict Manager -->
+  <div id="offlineBanner" class="hidden bg-amber-600 text-white text-xs font-semibold px-4 py-2.5 flex items-center justify-between z-40 shadow-sm">
+    <div class="flex items-center gap-2">
+      <i class="fa-solid fa-cloud-arrow-down animate-bounce text-amber-200"></i>
+      <span id="offlineBannerText">Offline Mode — Frontline IndexedDB storage active</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="viewConflictsBtn" onclick="openSyncConflictModal()" class="bg-white/20 hover:bg-white/30 text-white text-[10px] font-bold px-2 py-1 rounded-lg transition border border-white/25 flex items-center gap-1 touch-target">
+        <i class="fa-solid fa-code-compare"></i>
+        <span>Conflict Review</span>
+      </button>
+      <button id="syncOutboxBtn" onclick="syncOfflineOutbox()" class="bg-amber-800 hover:bg-amber-900 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg transition border border-amber-500/50 flex items-center gap-1.5 touch-target shadow-xs">
+        <i class="fa-solid fa-arrows-rotate"></i>
+        <span>Sync Outbox (<span id="outboxBadge">0</span>)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Live WebRTC Incoming Video Call Alert Banner -->
+  <div id="incomingCallBanner" class="hidden mx-4 my-2.5 bg-gradient-to-r from-emerald-600 via-teal-700 to-sky-700 text-white p-4 rounded-2xl shadow-xl border border-white/20 z-50 animate-pulse">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center text-xl text-white shadow-inner shrink-0">
+          <i class="fa-solid fa-video animate-bounce"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 mb-0.5">
+            <span class="text-[10px] font-black uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full text-emerald-100">Live Video Call</span>
+            <span id="incomingCallerRole" class="text-xs font-bold text-white/90"></span>
+          </div>
+          <p id="incomingCallerText" class="text-sm font-bold text-white leading-tight">Incoming teleconsultation call...</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
+        <button onclick="acceptIncomingCall()" class="flex-1 sm:flex-none bg-white text-emerald-800 hover:bg-emerald-50 text-xs font-extrabold px-4 py-2.5 rounded-xl shadow-md flex items-center justify-center gap-2 transition touch-target">
+          <i class="fa-solid fa-phone text-emerald-600"></i>
+          <span>Accept &amp; Connect</span>
+        </button>
+        <button onclick="declineIncomingCall()" class="bg-red-500/90 hover:bg-red-600 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 touch-target">
+          <i class="fa-solid fa-phone-slash"></i>
+          <span>Decline</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================== 1. ASHA WORKER VIEW =========================================================== -->
+  <div id="app-asha" class="app-view">
+
+    <!-- ASHA Dashboard -->
+    <main id="asha-dashboard" class="flex-1">
+      <!-- Profile Hero Banner with Rural & ASHA Figure Backdrop -->
+      <div class="hero-card-asha p-5 text-white mb-5 relative overflow-hidden">
+        <svg class="hero-backdrop-watermark w-36 h-36" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-4H7v-2h4V7h2v4h4v2h-4v4z"/>
+        </svg>
+        <p class="text-xs font-medium uppercase tracking-wider text-emerald-100 mb-1 relative z-10">Community Care Portal</p>
+        <div class="flex justify-between items-start relative z-10">
+          <div>
+            <h2 id="ashaHeroUserName" class="text-2xl font-bold text-white mb-0.5">Sunita Devi</h2>
+            <p id="ashaHeroWorkplace" class="text-xs text-emerald-100">ASHA Facilitator · Sub-Centre 4, Ward 4 · Dist. Satara</p>
+          </div>
+          <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shrink-0">
+            <i class="fa-solid fa-user-nurse text-xl text-white"></i>
+          </div>
+        </div>
+        <div class="mt-4 flex gap-2 flex-wrap relative z-10">
+          <span class="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 border border-white/10">
+            <i class="fa-solid fa-users text-emerald-200"></i>42 Assigned Patients
+          </span>
+          <span class="bg-red-500/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 border border-red-300/30">
+            <i class="fa-solid fa-triangle-exclamation text-white"></i>3 High Risk Flagged
+          </span>
+          <span class="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 border border-white/10">
+            <i class="fa-solid fa-arrows-rotate text-emerald-200"></i>Sync: Active
+          </span>
+        </div>
+      </div>
+
+      <!-- Rural Outreach & ASHA Field Panorama Figure Card -->
+      <div class="rural-figure-card asha-figure mb-5">
+        <div class="figure-image-wrapper">
+          <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80" alt="Rural Village Care Outreach" class="figure-bg-img" referrerpolicy="no-referrer">
+          <div class="figure-gradient-overlay"></div>
+          <div class="figure-content">
+            <div class="flex items-center justify-between mb-2">
+              <span class="figure-chip bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
+                <i class="fa-solid fa-tree text-emerald-400"></i> Rural Outreach Sector · Ward 4
+              </span>
+              <span class="text-[11px] text-white/90 font-medium bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-md">
+                Sub-Centre 4
+              </span>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1">Frontline Community Healthcare</h3>
+            <p class="text-xs text-white/85 mb-3 max-w-md">Door-to-door preventative screening, maternal care monitoring, and fast-track teleconsult triage for 4 remote villages.</p>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="figure-stat-box">
+                <span class="text-sm font-bold text-white">4 Villages</span>
+                <span class="text-[10px] text-emerald-200">Field Coverage</span>
+              </div>
+              <div class="figure-stat-box">
+                <span class="text-sm font-bold text-white">42 Families</span>
+                <span class="text-[10px] text-emerald-200">Active Registry</span>
+              </div>
+              <div class="figure-stat-box">
+                <span class="text-sm font-bold text-emerald-300">100% Offline</span>
+                <span class="text-[10px] text-emerald-200">Sub-Centre Sync</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Frontline Duty Workflow: Start from ASHA First Work -->
+      <div class="bg-gradient-to-br from-emerald-950 via-teal-950 to-slate-900 text-white p-4 sm:p-5 rounded-2xl mb-5 shadow-lg border border-emerald-500/30">
+        <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-white/10">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xs font-black border border-emerald-400/40">1</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-200">ASHA Work Order Routine</span>
+          </div>
+          <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-400/30 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <span>Priority Work #1</span>
+          </span>
+        </div>
+
+        <div class="mb-3">
+          <h3 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+            <span>First Work: Digital Triage &amp; Vitals Assessment</span>
+          </h3>
+          <p class="text-xs text-emerald-100/90 leading-relaxed">
+            Perform frontline screening for flagged patient <strong class="text-white font-bold">Ramesh Patil (48y)</strong>. Check blood pressure, pulse, and SpO2, and run ICMR clinical decision protocols powered by Gemini 3.8 AI.
+          </p>
+        </div>
+
+        <div class="bg-black/35 backdrop-blur-sm rounded-xl p-3.5 mb-3.5 border border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-300 flex items-center justify-center text-base border border-red-500/30 shrink-0">
+              <i class="fa-solid fa-heart-pulse animate-pulse"></i>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white flex items-center gap-2">
+                <span>Ramesh Patil · Ward 4</span>
+                <span class="bg-red-500/80 text-white text-[9px] font-bold px-1.5 py-0.2 rounded">HIGH RISK</span>
+              </div>
+              <div class="text-[11px] text-emerald-200 mt-0.5">BP: 150/95 · SpO2: 94% · Symptoms: Fever, Chest Tightness</div>
+            </div>
+          </div>
+          <button onclick="showASHA('asha-triage')" class="bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-play text-[10px]"></i>
+            <span>Start Work 1 Now</span>
+          </button>
+        </div>
+
+        <!-- 3-Step Sequence Flow Navigator -->
+        <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
+          <button onclick="showASHA('asha-triage')" class="bg-emerald-500/25 border-2 border-emerald-400/60 rounded-xl p-2.5 text-emerald-200 font-bold hover:bg-emerald-500/35 transition text-left cursor-pointer">
+            <span class="block text-[9px] text-emerald-300 font-black">WORK 1</span>
+            <span class="text-white text-xs block">Digital Triage</span>
+            <span class="text-[9px] text-emerald-200/80">Vitals &amp; AI score</span>
+          </button>
+          <button onclick="showASHA('asha-teleconsult')" class="bg-white/5 border border-white/10 rounded-xl p-2.5 text-gray-300 font-medium hover:bg-white/10 transition text-left cursor-pointer">
+            <span class="block text-[9px] text-gray-400 font-black">WORK 2</span>
+            <span class="text-white text-xs block">Teleconsult</span>
+            <span class="text-[9px] text-gray-400">Live with Doctor</span>
+          </button>
+          <button onclick="showASHA('asha-referral')" class="bg-white/5 border border-white/10 rounded-xl p-2.5 text-gray-300 font-medium hover:bg-white/10 transition text-left cursor-pointer">
+            <span class="block text-[9px] text-gray-400 font-black">WORK 3</span>
+            <span class="text-white text-xs block">Referral Flow</span>
+            <span class="text-[9px] text-gray-400">108 Ambulance GPS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+          <i class="fa-solid fa-bolt text-asha"></i>Quick Actions
+        </h3>
+        <span class="text-xs text-gray-500">Tap to execute</span>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <button onclick="openRegisterPatientModal()" class="col-span-2 bg-emerald-50/80 border border-emerald-300 p-3 rounded-2xl flex items-center justify-between touch-target hover:bg-emerald-100 transition shadow-xs">
+          <div class="flex items-center gap-3">
+            <div class="bg-asha text-white w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-xs"><i class="fa-solid fa-user-plus"></i></div>
+            <div class="text-left">
+              <h4 class="text-xs font-bold text-gray-800">Register New Patient / ABHA ID</h4>
+              <p class="text-[10px] text-gray-500">Add village resident to Sub-Centre 4 registry</p>
+            </div>
+          </div>
+          <span class="bg-asha text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1">
+            <i class="fa-solid fa-plus text-[10px]"></i><span>Register</span>
+          </span>
+        </button>
+        <button onclick="showASHA('asha-triage')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 touch-target hover:border-asha transition-all">
+          <div class="bg-emerald-50 text-asha w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xs"><i class="fa-solid fa-stethoscope"></i></div>
+          <span class="text-xs font-bold text-gray-800 text-center">Digital Triage</span>
+          <span class="text-[10px] text-gray-500 text-center">Symptom check &amp; risk</span>
+        </button>
+        <button onclick="showASHA('asha-teleconsult')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 touch-target hover:border-asha transition-all">
+          <div class="bg-emerald-50 text-asha w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xs"><i class="fa-solid fa-video"></i></div>
+          <span class="text-xs font-bold text-gray-800 text-center">Assisted Teleconsult</span>
+          <span class="text-[10px] text-gray-500 text-center">Live Video with Doctor</span>
+        </button>
+        <button onclick="showASHA('asha-referral')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 touch-target hover:border-danger transition-all">
+          <div class="bg-red-50 text-danger w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xs"><i class="fa-solid fa-route"></i></div>
+          <span class="text-xs font-bold text-gray-800 text-center">Referral Tracker</span>
+          <span class="text-[10px] text-gray-500 text-center">Live GPS transit flow</span>
+        </button>
+        <button onclick="showASHA('asha-stock')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 touch-target hover:border-asha transition-all">
+          <div class="bg-amber-50 text-warning w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xs"><i class="fa-solid fa-pills"></i></div>
+          <span class="text-xs font-bold text-gray-800 text-center">Medicine Availability</span>
+          <span class="text-[10px] text-gray-500 text-center">Stock &amp; restock orders</span>
+        </button>
+      </div>
+
+      <!-- High-Risk Follow-up List -->
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left text-asha"></i>Priority Follow-ups
+        </h3>
+        <span class="text-xs text-danger font-semibold">Action Required</span>
+      </div>
+      <div class="space-y-3">
+        <button onclick="showASHA('asha-record')" class="w-full text-left bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3.5 hover:border-danger transition-all">
+          <div class="bg-red-100 text-danger w-10 h-10 rounded-xl flex items-center justify-center text-base shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-sm font-bold text-gray-800">Ramesh Patil (48y)</h4>
+            <p class="text-xs text-gray-500 truncate">High BP · Referred to District Hospital yesterday</p>
+            <div class="flex gap-2 mt-1">
+              <span class="bg-red-50 text-danger text-[10px] font-bold px-2 py-0.5 rounded">BP 150/95</span>
+              <span class="bg-amber-50 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded">In Transit</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-gray-400"></i>
+        </button>
+
+        <button onclick="showASHA('asha-record')" class="w-full text-left bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3.5 hover:border-doctor transition-all">
+          <div class="bg-blue-100 text-doctor w-10 h-10 rounded-xl flex items-center justify-center text-base shrink-0"><i class="fa-solid fa-baby"></i></div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-sm font-bold text-gray-800">Priya Sharma (26y)</h4>
+            <p class="text-xs text-gray-500 truncate">Maternal Checkup · ANC 3rd Trimester · Due today</p>
+            <div class="flex gap-2 mt-1">
+              <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded">Hb: 10.8 g/dL</span>
+              <span class="bg-blue-50 text-doctor text-[10px] font-bold px-2 py-0.5 rounded">Scheduled</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-gray-400"></i>
+        </button>
+      </div>
+    </main>
+
+    <!-- ASHA Triage Module with Interactive Risk Engine -->
+    <main id="asha-triage" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showASHA('asha-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <div class="flex items-center gap-2 mb-0.5">
+            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">ASHA Work 1</span>
+            <span class="text-xs text-gray-500 font-medium">Frontline Clinical Assessment</span>
+          </div>
+          <h2 class="text-lg font-bold text-dark leading-tight">Digital Clinical Triage &amp; Vitals</h2>
+          <p class="text-xs text-gray-500">Rapid frontline triage with automated protocol risk score &amp; Gemini AI</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <label class="text-xs font-semibold text-gray-700 mb-1.5 block">Patient Name or ABHA ID</label>
+        <div class="flex gap-2 items-center mb-4">
+          <input id="triagePatientName" type="text" value="Ramesh Patil" placeholder="Enter name or scan ABHA ID" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-asha">
+          <button type="button" id="startVoiceDictationBtn" onclick="openVoiceDictationModal()" class="voice-btn shrink-0 bg-red-50 text-danger border border-red-200 hover:bg-red-100 touch-target" title="Voice Clinical Dictation (AI-Powered)"><i class="fa-solid fa-microphone text-danger animate-pulse"></i></button>
+        </div>
+
+        <label class="text-xs font-semibold text-gray-700 mb-2 block">Tap Presenting Symptoms (Interactive Risk Engine)</label>
+        <div class="flex flex-wrap gap-2 mb-3" id="symptomsContainer">
+          <span class="symptom-chip bg-gray-100 text-gray-600 border-gray-200" onclick="toggleSymptom(this)" data-risk="1">Mild Cough &amp; Cold</span>
+          <span class="symptom-chip bg-gray-100 text-gray-600 border-gray-200" onclick="toggleSymptom(this)" data-risk="1">Mild Headache</span>
+          <span class="symptom-chip bg-gray-100 text-gray-600 border-gray-200" onclick="toggleSymptom(this)" data-risk="1">Stomach Pain</span>
+          <span class="symptom-chip bg-gray-100 text-gray-600 border-gray-200" onclick="toggleSymptom(this)" data-risk="2">Fever (100-101°F)</span>
+          <span class="symptom-chip bg-gray-100 text-gray-600 border-gray-200" onclick="toggleSymptom(this)" data-risk="3">High Fever (&gt;102°F)</span>
+          <span class="symptom-chip bg-gray-100 text-gray-600 border-gray-200" onclick="toggleSymptom(this)" data-risk="4">Chest Tightness / Pain</span>
+          <span class="symptom-chip bg-gray-100 text-gray-600 border-gray-200" onclick="toggleSymptom(this)" data-risk="4">Severe Breathlessness</span>
+        </div>
+
+        <!-- Quick Preset Controls -->
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Quick Fill:</span>
+          <button type="button" onclick="setTriagePreset('normal')" class="text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-lg border border-emerald-200 transition">
+            <i class="fa-solid fa-heart-pulse text-emerald-600 mr-1"></i>Normal Vitals
+          </button>
+          <button type="button" onclick="setTriagePreset('emergency')" class="text-[11px] bg-red-50 hover:bg-red-100 text-danger font-bold px-2.5 py-1 rounded-lg border border-red-200 transition">
+            <i class="fa-solid fa-triangle-exclamation text-danger mr-1"></i>Emergency Case
+          </button>
+          <button type="button" onclick="setTriagePreset('clear')" class="text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold px-2 py-1 rounded-lg border border-gray-200 transition">
+            Reset
+          </button>
+        </div>
+
+        <!-- Vitals Input Row -->
+        <div class="grid grid-cols-3 gap-2 mb-3">
+          <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+            <span class="text-[10px] text-gray-500 font-semibold block">Blood Pressure</span>
+            <input type="text" id="triageBP" value="120/80" oninput="updateTriageLivePreview()" class="w-full bg-transparent text-xs font-bold text-gray-800 focus:outline-none">
+          </div>
+          <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+            <span class="text-[10px] text-gray-500 font-semibold block">Pulse Rate</span>
+            <input type="text" id="triagePulse" value="72 bpm" oninput="updateTriageLivePreview()" class="w-full bg-transparent text-xs font-bold text-gray-800 focus:outline-none">
+          </div>
+          <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+            <span class="text-[10px] text-gray-500 font-semibold block">Oxygen SpO2</span>
+            <input type="text" id="triageSpO2" value="98%" oninput="updateTriageLivePreview()" class="w-full bg-transparent text-xs font-bold text-gray-800 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Live Triage Dynamic Status Preview Bar -->
+        <div id="triageLivePreview" class="bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2 mb-3 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <span id="previewRiskDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span id="previewRiskText" class="font-bold text-gray-700">Estimated: Normal / Low Risk (0/10)</span>
+          </div>
+          <span id="previewDirectiveText" class="text-[10px] font-semibold text-gray-500">Green Protocol · Routine Monitoring</span>
+        </div>
+
+        <!-- AI Guidance Language Selector -->
+        <div class="flex items-center justify-between bg-emerald-50/60 border border-emerald-200/60 px-3 py-1.5 rounded-xl mb-3">
+          <span class="text-[10px] font-semibold text-emerald-900 flex items-center gap-1">
+            <i class="fa-solid fa-language text-emerald-700"></i> AI Advisory Language:
+          </span>
+          <select id="aiLanguageSelect" class="bg-white border border-emerald-300 text-emerald-900 text-xs font-bold rounded-lg px-2 py-1 focus:outline-none">
+            <option value="English">English</option>
+            <option value="Hindi" selected>हिंदी (Hindi)</option>
+            <option value="Marathi">मराठी (Marathi)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <button id="calculateTriageBtn" onclick="calculateTriageRisk()" class="bg-asha text-white font-bold py-3 rounded-xl shadow-md touch-target hover:bg-emerald-700 transition text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-calculator"></i><span>Protocol Score &amp; Save</span>
+          </button>
+          <button id="aiAnalyzeBtn" onclick="runAiClinicalAnalysis()" class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold py-3 rounded-xl shadow-md touch-target hover:opacity-95 transition text-xs flex items-center justify-center gap-1.5 border border-emerald-400/40 cursor-pointer">
+            <i class="fa-solid fa-wand-magic-sparkles text-emerald-200"></i><span>AI Clinical Assistant</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- AI Clinical Assistant Result Box (Collapsible/Dynamic) -->
+      <div id="aiClinicalGuidanceCard" class="hidden bg-gradient-to-br from-emerald-950 to-slate-900 text-white p-4 rounded-2xl mb-4 border border-emerald-500/30 shadow-lg animate-fade-in">
+        <div class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-sm border border-emerald-400/30">
+              <i class="fa-solid fa-brain"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+                <span>AI Clinical Decision Support</span>
+                <span id="aiPoweredBadge" class="bg-emerald-500/30 text-emerald-300 text-[9px] px-1.5 py-0.5 rounded font-mono">Gemini 3.8</span>
+              </h4>
+              <p class="text-[10px] text-emerald-200/70">Rural Emergency Protocol &amp; Triage Advisor</p>
+            </div>
+          </div>
+          <span id="aiTriageBadge" class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">CRITICAL</span>
+        </div>
+
+        <div class="space-y-2.5 text-xs">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block mb-1">Suspected Conditions</span>
+            <div id="aiSuspectedList" class="flex flex-wrap gap-1.5">
+              <span class="bg-white/10 text-emerald-100 text-[11px] px-2 py-0.5 rounded-md border border-white/10">Acute Hypertensive Crisis</span>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-300 block mb-1">Immediate Frontline Actions</span>
+            <ul id="aiActionsList" class="space-y-1 text-slate-200 text-[11px] list-disc list-inside">
+              <li>Place patient in upright semi-fowler posture</li>
+            </ul>
+          </div>
+
+          <div class="bg-white/5 border border-white/10 rounded-xl p-2.5">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-sky-300 block mb-0.5">Referral Escalation</span>
+            <p id="aiReferralRec" class="text-xs text-sky-100 font-medium">Immediate 108 Ambulance Dispatch to District Hospital Emergency.</p>
+          </div>
+
+          <div class="bg-emerald-900/40 border border-emerald-500/20 rounded-xl p-2.5">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block mb-0.5">ASHA Frontline Note</span>
+            <p id="aiAshaNotes" class="text-[11px] text-emerald-100 leading-relaxed italic">Continuous vitals monitoring; keep family calm while transport arrives.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Triage Result Card -->
+      <div id="ashaTriageResult" class="bg-red-50 border-2 border-red-200 p-4 rounded-2xl mb-4">
+        <div class="flex items-start gap-3">
+          <div class="bg-danger text-white w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-danger text-sm" id="triageRiskTitle">High Clinical Risk — RED ALERT</h4>
+              <span class="bg-red-100 text-danger text-[10px] font-bold px-2 py-0.5 rounded-full" id="triageRiskScore">Risk Score: 8/10</span>
+            </div>
+            <p class="text-xs text-red-800 mt-1 leading-relaxed" id="triageRiskDesc">
+              Acute respiratory distress combined with stage-2 hypertension (150/95) and borderline SpO2 (94%). Immediate assisted teleconsultation and priority referral required.
+            </p>
+            <div class="flex gap-2 mt-3 flex-wrap">
+              <button onclick="showASHA('asha-teleconsult')" class="bg-danger text-white text-xs font-bold px-4 py-2.5 rounded-xl touch-target shadow-sm hover:bg-red-700 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-video"></i><span>Launch Teleconsult</span>
+              </button>
+              <button onclick="showASHA('asha-referral')" class="bg-white border border-danger text-danger text-xs font-bold px-4 py-2.5 rounded-xl touch-target hover:bg-red-50 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-route"></i><span>Initiate Referral</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ASHA Assisted Teleconsultation Video Suite -->
+    <main id="asha-teleconsult" class="flex-1" style="display:none;">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <button onclick="showASHA('asha-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-arrow-left"></i></button>
+          <div>
+            <div class="flex items-center gap-2 mb-0.5">
+              <span class="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">ASHA Work 2</span>
+              <span class="text-xs text-gray-500 font-medium">Doctor Video Consultation</span>
+            </div>
+            <h2 class="text-lg font-bold text-dark leading-tight">Assisted Teleconsultation</h2>
+            <p class="text-xs text-gray-500">Live Clinical WebRTC Session with PHC Medical Officer</p>
+          </div>
+        </div>
+        <div class="pulse-live-indicator">
+          <span class="live-dot-ping"></span>
+          <span id="callTimerAsha">03:42</span>
+        </div>
+      </div>
+
+      <!-- Real-time Video Container -->
+      <div class="teleconsult-video-container relative bg-slate-950 overflow-hidden">
+        <!-- Live Remote Stream (Doctor's live camera) -->
+        <video id="ashaRemoteVideo" class="teleconsult-video-feed w-full h-full object-cover hidden" autoplay playsinline></video>
+        <!-- Canvas Fallback / Diagnostic Overlay -->
+        <canvas id="ashaVideoCanvas" class="teleconsult-video-feed w-full h-full object-cover absolute inset-0 hidden"></canvas>
+
+        <!-- Connecting / Waiting Overlay (Visible while waiting for Doctor) -->
+        <div id="ashaCallWaitingOverlay" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center text-white z-10">
+          <div class="relative mb-3">
+            <div class="w-16 h-16 rounded-full bg-sky-500/20 flex items-center justify-center text-2xl text-sky-400 border border-sky-400/40">
+              <i class="fa-solid fa-user-doctor"></i>
+            </div>
+            <span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center text-xs text-white">
+              <i class="fa-solid fa-video animate-pulse"></i>
+            </span>
+          </div>
+          <h4 class="text-base font-bold mb-1">Live WebRTC Session · PHC Doctor</h4>
+          <p class="text-xs text-gray-300 max-w-xs mb-3">Connecting Sub-Centre 4 to Dr. Rajesh Kumar over secure peer-to-peer link...</p>
+          <div class="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-950/70 border border-emerald-500/40 px-3 py-1.5 rounded-full font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span id="ashaCallStatusBadge">Ready · Awaiting Doctor to Join</span>
+          </div>
+          <div class="flex gap-2 mt-4 flex-wrap justify-center pointer-events-auto">
+            <button id="ashaCallConnectBtn" onclick="window.PulseCall && window.PulseCall.initiateCall('asha')" class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md flex items-center gap-2 transition cursor-pointer">
+              <i class="fa-solid fa-phone"></i>
+              <span>Ring Doctor Now</span>
+            </button>
+            <button onclick="window.PulseCall && window.PulseCall.reconnectCall('asha')" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-gray-200 text-xs px-3 py-2 rounded-xl border border-white/20 flex items-center gap-1.5 transition cursor-pointer">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Reconnect</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="teleconsult-overlay-hud z-20 pointer-events-none">
+          <div class="flex justify-between items-start pointer-events-auto">
+            <div class="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-xs flex items-center gap-2 border border-white/10">
+              <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+              <span>Encrypted · WebRTC Live</span>
+              <span class="text-emerald-400 text-[10px] ml-1">HD 720p</span>
+            </div>
+            <div class="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-xs flex items-center gap-2 border border-white/10">
+              <span class="audio-bars"><span class="audio-bar"></span><span class="audio-bar"></span><span class="audio-bar"></span></span>
+              <span>Dr. Rajesh Kumar (PHC)</span>
+            </div>
+          </div>
+
+          <!-- Bottom HUD with Patient Vitals Bar -->
+          <div class="flex justify-between items-end pointer-events-auto">
+            <div class="bg-black/70 backdrop-blur-md p-2.5 rounded-xl border border-white/15 text-white text-xs space-y-1">
+              <p class="font-semibold text-emerald-300 flex items-center gap-1">
+                <i class="fa-solid fa-heart-pulse"></i>Vitals: Ramesh Patil
+              </p>
+              <div class="flex gap-3 text-[11px] text-gray-200">
+                <span>BP: <strong class="text-white">150/95</strong></span>
+                <span>Pulse: <strong class="text-white">98 bpm</strong></span>
+                <span>SpO2: <strong class="text-white">94%</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Picture in Picture (Self Camera - ASHA with Patient) -->
+        <div class="teleconsult-pip z-30 shadow-lg border-2 border-emerald-400">
+          <video id="ashaLocalVideo" class="w-full h-full object-cover" autoplay playsinline muted></video>
+          <canvas id="ashaPipCanvas" class="w-full h-full object-cover hidden"></canvas>
+          <span class="absolute bottom-1 left-1.5 bg-black/70 text-[9px] text-white px-1.5 py-0.5 rounded font-bold pointer-events-none">You (ASHA)</span>
+        </div>
+      </div>
+
+      <!-- Video Call Controls Row -->
+      <div class="call-controls-row">
+        <button id="ashaMuteBtn" onclick="toggleCallMute('asha')" class="call-btn-circle call-btn-secondary" title="Mute/Unmute Microphone">
+          <i class="fa-solid fa-microphone"></i>
+        </button>
+        <button id="ashaVideoBtn" onclick="toggleCallVideo('asha')" class="call-btn-circle call-btn-secondary" title="Camera On/Off">
+          <i class="fa-solid fa-video"></i>
+        </button>
+        <button onclick="switchCamera('asha')" class="call-btn-circle call-btn-secondary" title="Switch Front/Rear Camera">
+          <i class="fa-solid fa-camera-rotate"></i>
+        </button>
+        <button onclick="endCall('asha')" class="call-btn-circle call-btn-end" title="End Teleconsultation">
+          <i class="fa-solid fa-phone-slash"></i>
+        </button>
+      </div>
+
+      <!-- Doctor Notes & Prescription Output -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-file-waveform text-asha"></i>Doctor's Live Consultation Notes
+          </h3>
+          <span class="text-[10px] bg-emerald-50 text-asha font-bold px-2 py-0.5 rounded-full border border-emerald-200">Synced Offline</span>
+        </div>
+        <p class="text-xs text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed mb-3">
+          "Acute bronchial inflammation with elevated diastolic pressure. Administer first dose Amoxicillin 500mg immediately. Emergency referral dispatched to District Hospital Cardiology/Pulmonology."
+        </p>
+        <button onclick="showASHA('asha-referral')" class="w-full bg-asha text-white text-xs font-bold py-2.5 rounded-xl touch-target hover:bg-emerald-700 transition">
+          <i class="fa-solid fa-route mr-1.5"></i>Proceed to Referral Tracking
+        </button>
+      </div>
+    </main>
+
+    <!-- ASHA Referral Tracker with Stage Figure -->
+    <main id="asha-referral" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showASHA('asha-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <div class="flex items-center gap-2 mb-0.5">
+            <span class="bg-red-100 text-red-800 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">ASHA Work 3</span>
+            <span class="text-xs text-gray-500 font-medium">108 Ambulance Transit &amp; Hospital Handover</span>
+          </div>
+          <h2 class="text-lg font-bold text-dark leading-tight">Referral Pathway Tracker</h2>
+          <p class="text-xs text-gray-500">Live multi-tier coordination across rural health facilities</p>
+        </div>
+      </div>
+
+      <!-- Active Referral Card 1 with Interactive Pathway Controls -->
+      <div id="activeReferralContainer" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <h4 id="refPatientName" class="text-sm font-bold text-gray-800">Ramesh Patil (48y)</h4>
+            <p id="refSubText" class="text-xs text-gray-500">Emergency Referral: High BP &amp; Dyspnea · Sub-Centre 4 → District Hospital</p>
+          </div>
+          <span id="refStatusBadge" class="bg-amber-100 text-warning text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+            <i class="fa-solid fa-truck-medical text-[10px]"></i><span id="refStatusText">In Transit (Stage 3/4)</span>
+          </span>
+        </div>
+
+        <!-- 4-Stage Pathway Figure -->
+        <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-100 mb-3">
+          <div id="referralStageDots" class="flex items-center mb-2">
+            <div id="refStageDot1" class="stage-dot bg-asha" title="Sub-Centre Completed"></div>
+            <div id="refStageLine1" class="stage-line bg-asha"></div>
+            <div id="refStageDot2" class="stage-dot bg-asha" title="PHC Teleconsult Completed"></div>
+            <div id="refStageLine2" class="stage-line bg-asha"></div>
+            <div id="refStageDot3" class="stage-dot bg-warning animate-pulse" title="Rural Hospital Transit"></div>
+            <div id="refStageLine3" class="stage-line"></div>
+            <div id="refStageDot4" class="stage-dot bg-gray-300" title="District Hospital Pending"></div>
+          </div>
+          <div class="flex justify-between text-[10px] text-gray-600 font-semibold px-0.5">
+            <span id="refStageLabel1" class="text-asha">1. Sub-Centre</span>
+            <span id="refStageLabel2" class="text-asha">2. PHC Ward 4</span>
+            <span id="refStageLabel3" class="text-warning">3. Rural Hosp. (ETA 18m)</span>
+            <span id="refStageLabel4" class="text-gray-400">4. District Hosp.</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button id="advanceReferralBtn" onclick="advanceReferralStage()" class="flex-1 bg-amber-500 text-white text-xs font-bold py-2.5 rounded-xl touch-target hover:bg-amber-600 transition flex items-center justify-center gap-1.5 shadow-xs">
+            <i class="fa-solid fa-forward-step"></i><span id="advanceStageBtnText">Advance Transit Stage</span>
+          </button>
+          <button id="toggleGpsTrackingBtn" onclick="toggleAmbulanceGpsTracker()" class="flex-1 bg-amber-50 text-amber-900 border border-amber-300 text-xs font-bold py-2.5 rounded-xl touch-target hover:bg-amber-100 transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-location-crosshairs text-amber-600 animate-spin"></i><span>Live 108 GPS Telemetry</span>
+          </button>
+          <button onclick="showASHA('asha-record')" class="bg-emerald-50 text-asha text-xs font-bold px-3 py-2.5 rounded-xl touch-target hover:bg-emerald-100 transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-file-waveform"></i><span>Record</span>
+          </button>
+        </div>
+
+        <!-- Live Ambulance 108 GPS & Telemetry Simulator Section -->
+        <div id="ambulanceGpsPanel" class="mt-4 pt-3 border-t border-gray-100">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+              <h5 class="text-xs font-bold text-gray-800">Ambulance 108 Live Radar · MH-12-AMB-108</h5>
+            </div>
+            <span id="ambEtaBadge" class="bg-amber-100 text-warning text-[10px] font-extrabold px-2 py-0.5 rounded-full">ETA: 14 mins</span>
+          </div>
+
+          <!-- Radar Map Canvas Simulation -->
+          <div class="relative bg-slate-900 rounded-xl overflow-hidden border border-slate-700 h-44 shadow-inner mb-3">
+            <!-- Road Vector Graphic Canvas -->
+            <svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="roadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#334155" />
+                  <stop offset="100%" stop-color="#1E293B" />
+                </linearGradient>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="glow" />
+                  <feComposite in="SourceGraphic" in2="glow" operator="over" />
+                </filter>
+              </defs>
+
+              <!-- Grid overlay -->
+              <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+                <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#334155" stroke-width="0.5" opacity="0.4"/>
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+
+              <!-- Route Path -->
+              <path id="ambulanceRoutePath" d="M 40,130 C 100,120 120,40 180,45 C 240,50 260,110 320,80 C 370,55 420,70 480,40" fill="none" stroke="#475569" stroke-width="8" stroke-linecap="round" />
+              <path id="ambulanceRouteProgress" d="M 40,130 C 100,120 120,40 180,45 C 240,50 260,110 320,80 C 370,55 420,70 480,40" fill="none" stroke="#F59E0B" stroke-width="4" stroke-dasharray="10 5" stroke-linecap="round" />
+
+              <!-- Sub-Centre Marker (Start) -->
+              <circle cx="40" cy="130" r="7" fill="#0F766E" stroke="#CCFBF1" stroke-width="2"/>
+              <text x="40" y="152" fill="#94A3B8" font-size="9" font-weight="bold" text-anchor="middle">Sub-Centre 4</text>
+
+              <!-- Rural PHC Waypoint -->
+              <circle cx="180" cy="45" r="5" fill="#0284C7" stroke="#E0F2FE" stroke-width="1.5"/>
+              <text x="180" y="32" fill="#94A3B8" font-size="8" font-weight="semibold" text-anchor="middle">PHC Ward 4</text>
+
+              <!-- District Hospital Destination -->
+              <circle cx="480" cy="40" r="8" fill="#DC2626" stroke="#FECACA" stroke-width="2"/>
+              <text x="470" y="24" fill="#F87171" font-size="9" font-weight="bold" text-anchor="middle">District Hospital</text>
+            </svg>
+
+            <!-- Animated Ambulance Marker moving along coordinate -->
+            <div id="ambulanceLiveMarker" class="absolute z-20 flex flex-col items-center transition-all duration-700 ease-out" style="left: 45%; top: 38%; transform: translate(-50%, -50%);">
+              <div class="relative flex items-center justify-center">
+                <span class="absolute w-8 h-8 rounded-full bg-amber-400/40 animate-ping"></span>
+                <div class="w-7 h-7 rounded-full bg-amber-500 border-2 border-white shadow-lg text-white flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-truck-medical text-[11px]"></i>
+                </div>
+              </div>
+              <span class="bg-black/80 text-amber-300 text-[8px] font-bold px-1.5 py-0.5 rounded mt-0.5 whitespace-nowrap shadow border border-amber-400/40">
+                108 · 58 km/h
+              </span>
+            </div>
+
+            <!-- Satellite Overlay HUD -->
+            <div class="absolute bottom-2 left-2 z-10 bg-slate-950/85 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-slate-700 text-[10px] text-slate-300 space-y-0.5">
+              <div class="flex items-center gap-1.5">
+                <i class="fa-solid fa-satellite-dish text-emerald-400 text-[9px]"></i>
+                <span>GPS Lock: <strong>High Accuracy (4.2m)</strong></span>
+              </div>
+              <p class="text-slate-400 text-[9px]">Route: NH-48 Bypass → Civil Hospital Road</p>
+            </div>
+
+            <div class="absolute top-2 right-2 z-10 bg-slate-950/85 backdrop-blur-sm px-2 py-1 rounded-lg border border-slate-700 text-[9px] text-emerald-300 font-mono">
+              <span id="ambCoordText">17.6842° N, 74.0210° E</span>
+            </div>
+          </div>
+
+          <!-- Live On-Board In-Transit Telemetry Cards -->
+          <div class="grid grid-cols-3 gap-2">
+            <div class="bg-gray-50 p-2 rounded-xl border border-gray-100 text-center">
+              <span class="text-[9px] text-gray-500 font-semibold block">Vehicle Speed</span>
+              <p id="ambSpeedVal" class="text-xs font-black text-gray-800">58 km/h</p>
+              <span class="text-[8px] text-emerald-600 font-medium">Optimal Transit</span>
+            </div>
+            <div class="bg-gray-50 p-2 rounded-xl border border-gray-100 text-center">
+              <span class="text-[9px] text-gray-500 font-semibold block">Distance Remaining</span>
+              <p id="ambDistVal" class="text-xs font-black text-amber-600">8.4 km</p>
+              <span class="text-[8px] text-gray-500 font-medium">Traffic Clear</span>
+            </div>
+            <div class="bg-gray-50 p-2 rounded-xl border border-gray-100 text-center">
+              <span class="text-[9px] text-gray-500 font-semibold block">Onboard O2 Flow</span>
+              <p class="text-xs font-black text-sky-600">4.5 L/min</p>
+              <span class="text-[8px] text-sky-600 font-medium">Cylinder #1</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed Referral Card 2 -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <h4 class="text-sm font-bold text-gray-800">Priya Sharma (26y)</h4>
+            <p class="text-xs text-gray-500">Maternal checkup &amp; ultrasound · Referred 3 days ago</p>
+          </div>
+          <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+            <i class="fa-solid fa-circle-check text-[10px]"></i>Completed
+          </span>
+        </div>
+        <div class="flex items-center mb-1">
+          <div class="stage-dot bg-asha"></div>
+          <div class="stage-line bg-asha"></div>
+          <div class="stage-dot bg-asha"></div>
+          <div class="stage-line bg-asha"></div>
+          <div class="stage-dot bg-asha"></div>
+          <div class="stage-line bg-asha"></div>
+          <div class="stage-dot bg-asha"></div>
+        </div>
+        <div class="flex justify-between text-[10px] text-gray-500 px-0.5 mt-2">
+          <span>Sub-Centre</span><span>PHC</span><span>Rural Hosp.</span><span>District Hospital</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- ASHA Medicine Availability -->
+    <main id="asha-stock" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showASHA('asha-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h2 class="text-lg font-bold text-dark leading-tight">Sub-Centre 4 Stock</h2>
+          <p class="text-xs text-gray-500">Essential medicine inventory synced from PHC Central Warehouse</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 mb-4" id="ashaStockList">
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+          <div>
+            <h4 class="text-sm font-bold text-gray-800">Amoxicillin 500mg</h4>
+            <p class="text-xs text-gray-500">220 strips in stock · Reorder at 50</p>
+          </div>
+          <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-lg">Available</span>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+          <div>
+            <h4 class="text-sm font-bold text-gray-800">Iron &amp; Folic Acid (IFA)</h4>
+            <p class="text-xs text-gray-500">18 strips remaining · Reorder threshold 25</p>
+          </div>
+          <span class="bg-amber-100 text-warning text-xs font-bold px-2.5 py-1 rounded-lg">Low Stock</span>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+          <div>
+            <h4 class="text-sm font-bold text-gray-800">Oral Rehydration Salts (ORS)</h4>
+            <p class="text-xs text-gray-500">0 packets remaining · Critical shortage</p>
+          </div>
+          <span class="bg-red-100 text-danger text-xs font-bold px-2.5 py-1 rounded-lg">Out of Stock</span>
+        </div>
+      </div>
+
+      <button onclick="requestRestock()" class="w-full bg-asha text-white font-bold py-3.5 rounded-xl shadow-md touch-target hover:bg-emerald-700 transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-truck-medical"></i><span>Request Emergency Restock from PHC</span>
+      </button>
+    </main>
+
+    <!-- Longitudinal Patient Record -->
+    <main id="asha-record" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showASHA('asha-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h2 class="text-lg font-bold text-dark leading-tight">Ramesh Patil · Longitudinal Record</h2>
+          <p class="text-xs text-gray-500">ABHA: 12-3456-7890 · Integrated Unified Health History</p>
+        </div>
+      </div>
+      <div id="recordTimeline"></div>
+    </main>
+
+    <!-- ASHA Fixed Bottom Nav -->
+    <nav class="asha-nav">
+      <button onclick="showASHA('asha-dashboard')" class="nav-item text-asha"><i class="fa-solid fa-house text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Home</span></button>
+      <button onclick="showASHA('asha-triage')" class="nav-item"><i class="fa-solid fa-stethoscope text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Triage</span></button>
+      <button onclick="showASHA('asha-referral')" class="nav-item"><i class="fa-solid fa-route text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Referrals</span></button>
+      <button onclick="showASHA('asha-stock')" class="nav-item"><i class="fa-solid fa-pills text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Stock</span></button>
+      <button onclick="switchWorkplace()" class="nav-item text-gray-400 hover:text-danger"><i class="fa-solid fa-arrow-right-from-bracket text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Exit</span></button>
+    </nav>
+  </div>
+
+  <!-- =========================================================== 2. DOCTOR / PHC VIEW =========================================================== -->
+  <div id="app-doctor" class="app-view">
+
+    <!-- Doctor Queue & Analytical Figure -->
+    <main id="doctor-queue" class="flex-1">
+      <!-- Profile Hero Banner with Doctor & Clinical Backdrop -->
+      <div class="hero-card-doctor p-5 text-white mb-5 relative overflow-hidden">
+        <svg class="hero-backdrop-watermark w-36 h-36" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/>
+        </svg>
+        <p class="text-xs font-medium uppercase tracking-wider text-sky-100 mb-1 relative z-10">Clinical Consultation Queue</p>
+        <div class="flex justify-between items-start relative z-10">
+          <div>
+            <h2 id="doctorHeroUserName" class="text-2xl font-bold text-white mb-0.5">Dr. Rajesh Kumar</h2>
+            <p id="doctorHeroWorkplace" class="text-xs text-sky-100">Medical Officer · PHC Ward 4 · Teleconsult Station 1</p>
+          </div>
+          <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shrink-0">
+            <i class="fa-solid fa-user-doctor text-xl text-white"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHC Doctor Clinical Teleconsultation Panorama Figure Card -->
+      <div class="rural-figure-card doctor-figure mb-5">
+        <div class="figure-image-wrapper">
+          <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80" alt="Rural Telemedicine Clinic" class="figure-bg-img" referrerpolicy="no-referrer">
+          <div class="figure-gradient-overlay doctor-overlay"></div>
+          <div class="figure-content">
+            <div class="flex items-center justify-between mb-2">
+              <span class="figure-chip bg-sky-950/80 text-sky-300 border border-sky-500/30">
+                <i class="fa-solid fa-laptop-medical text-sky-400"></i> PHC Telemedicine &amp; Clinical Station
+              </span>
+              <span class="text-[11px] text-white/90 font-medium bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-md">
+                Live Video HD
+              </span>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1">Rural Primary Health Centre Teleconsult</h3>
+            <p class="text-xs text-white/85 mb-3 max-w-md">Bridging medical specialists with frontline ASHA workers and rural patients with AI assisted vitals triage and instant digital prescriptions.</p>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="figure-stat-box">
+                <span class="text-sm font-bold text-white">7 Waiting</span>
+                <span class="text-[10px] text-sky-200">Queue Triage</span>
+              </div>
+              <div class="figure-stat-box">
+                <span class="text-sm font-bold text-white">&lt; 12 mins</span>
+                <span class="text-[10px] text-sky-200">Avg Turnaround</span>
+              </div>
+              <div class="figure-stat-box">
+                <span class="text-sm font-bold text-sky-300">Civil Hospital</span>
+                <span class="text-[10px] text-sky-200">Direct Escalation</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Consultation Metrics Summary -->
+      <div class="grid grid-cols-3 gap-2.5 mb-4">
+        <div class="bg-sky-50 rounded-xl p-3 text-center border border-sky-100">
+          <p class="text-xl font-extrabold text-doctor">7</p>
+          <p class="text-[10px] text-gray-600 font-medium">In Queue</p>
+        </div>
+        <div class="bg-sky-50 rounded-xl p-3 text-center border border-sky-100">
+          <p class="text-xl font-extrabold text-doctor">12m</p>
+          <p class="text-[10px] text-gray-600 font-medium">Avg Wait</p>
+        </div>
+        <div class="bg-red-50 rounded-xl p-3 text-center border border-red-100">
+          <p class="text-xl font-extrabold text-danger">3</p>
+          <p class="text-[10px] text-gray-600 font-medium">High Risk</p>
+        </div>
+      </div>
+
+      <!-- Analytical Trend Figure (SVG Data Chart) -->
+      <div class="metric-figure-box mb-4">
+        <div class="flex justify-between items-center mb-2">
+          <h4 class="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-chart-line text-doctor"></i>Weekly Consultation Throughput
+          </h4>
+          <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded">+18% vs Last Week</span>
+        </div>
+        <!-- SVG Sparkline Area Chart -->
+        <svg class="chart-svg" viewBox="0 0 400 80">
+          <defs>
+            <linearGradient id="docGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0284c7" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#0284c7" stop-opacity="0.0" />
+            </linearGradient>
+          </defs>
+          <path d="M0,65 Q50,45 100,50 T200,30 T300,20 T400,10 L400,80 L0,80 Z" fill="url(#docGrad)" />
+          <path d="M0,65 Q50,45 100,50 T200,30 T300,20 T400,10" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" />
+          <circle cx="100" cy="50" r="4" fill="#0284c7" />
+          <circle cx="200" cy="30" r="4" fill="#0284c7" />
+          <circle cx="300" cy="20" r="4" fill="#0284c7" />
+          <circle cx="400" cy="10" r="5" fill="#0369a1" stroke="#ffffff" stroke-width="2" />
+        </svg>
+        <div class="flex justify-between text-[9px] text-gray-400 font-semibold px-1 mt-1">
+          <span>Mon (18)</span><span>Tue (24)</span><span>Wed (31)</span><span>Thu (42)</span><span>Today (56)</span>
+        </div>
+      </div>
+
+      <!-- Queue Patient List -->
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold text-gray-800">Priority Patient Queue</h3>
+        <button onclick="showDoctor('doctor-consult')" class="bg-sky-50 text-doctor hover:bg-sky-100 border border-doctor text-xs font-bold px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-video text-sky-600 animate-pulse"></i>
+          <span>Live Call with ASHA</span>
+        </button>
+      </div>
+
+      <div id="doctorQueueList" class="space-y-3">
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border-l-4 border-danger flex items-center gap-3">
+          <div class="bg-red-50 text-danger w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-sm font-bold text-gray-800">Ramesh Patil (48y)</h4>
+            <p class="text-xs text-gray-500">Triage: RED · BP 150/95 · Waiting 4m</p>
+          </div>
+          <button onclick="showDoctor('doctor-consult')" class="bg-doctor text-white text-xs font-bold px-3.5 py-2.5 rounded-xl touch-target hover:bg-sky-700 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-video"></i>
+            <span>Live Video</span>
+          </button>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border-l-4 border-yellow-500 flex items-center gap-3">
+          <div class="bg-amber-50 text-warning w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-baby"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-sm font-bold text-gray-800">Priya Sharma (26y)</h4>
+            <p class="text-xs text-gray-500">Triage: Moderate · Maternal Review · Waiting 9m</p>
+          </div>
+          <button onclick="showDoctor('doctor-consult')" class="bg-doctor text-white text-xs font-bold px-3.5 py-2.5 rounded-xl touch-target hover:bg-sky-700 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-video"></i>
+            <span>Live Video</span>
+          </button>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border-l-4 border-green-500 flex items-center gap-3">
+          <div class="bg-green-50 text-green-600 w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-sm font-bold text-gray-800">Amit Singh (35y)</h4>
+            <p class="text-xs text-gray-500">Triage: Low · Routine Checkup · Waiting 15m</p>
+          </div>
+          <button onclick="showDoctor('doctor-consult')" class="bg-doctor text-white text-xs font-bold px-3.5 py-2.5 rounded-xl touch-target hover:bg-sky-700 transition">
+            Consult
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Doctor Live Consultation Video Suite -->
+    <main id="doctor-consult" class="flex-1" style="display:none;">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <button onclick="showDoctor('doctor-queue')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+          <div>
+            <h2 class="text-lg font-bold text-dark leading-tight">Consultation: Ramesh Patil</h2>
+            <p class="text-xs text-gray-500">Connecting Sub-Centre 4 via Encrypted WebRTC Stream</p>
+          </div>
+        </div>
+        <div class="pulse-live-indicator">
+          <span class="live-dot-ping"></span>
+          <span id="callTimerDoctor">02:15</span>
+        </div>
+      </div>
+
+      <!-- Live Doctor Video Feed Container -->
+      <div class="teleconsult-video-container relative bg-slate-950 overflow-hidden">
+        <!-- Live Remote Stream (ASHA and Patient's live camera) -->
+        <video id="doctorRemoteVideo" class="teleconsult-video-feed w-full h-full object-cover hidden" autoplay playsinline></video>
+        <!-- Canvas Fallback / Diagnostic Feed -->
+        <canvas id="doctorVideoCanvas" class="teleconsult-video-feed w-full h-full object-cover absolute inset-0 hidden"></canvas>
+
+        <!-- Connecting / Waiting Overlay (Visible while waiting for ASHA) -->
+        <div id="docCallWaitingOverlay" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center text-white z-10">
+          <div class="relative mb-3">
+            <div class="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center text-2xl text-emerald-400 border border-emerald-400/40">
+              <i class="fa-solid fa-hospital-user"></i>
+            </div>
+            <span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center text-xs text-white">
+              <i class="fa-solid fa-phone animate-pulse"></i>
+            </span>
+          </div>
+          <h4 class="text-base font-bold mb-1">Connecting to Sub-Centre 4</h4>
+          <p class="text-xs text-gray-300 max-w-xs mb-3">Live WebRTC link with ASHA Sunita Devi and patient Ramesh Patil...</p>
+          <div class="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-950/70 border border-emerald-500/40 px-3 py-1.5 rounded-full font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span id="docCallStatusBadge">Ready · Awaiting ASHA Connection</span>
+          </div>
+          <div class="flex gap-2 mt-4 flex-wrap justify-center pointer-events-auto">
+            <button id="docCallConnectBtn" onclick="window.PulseCall && window.PulseCall.initiateCall('doctor')" class="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md flex items-center gap-2 transition cursor-pointer">
+              <i class="fa-solid fa-phone"></i>
+              <span>Call Sub-Centre / ASHA</span>
+            </button>
+            <button onclick="window.PulseCall && window.PulseCall.reconnectCall('doctor')" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-gray-200 text-xs px-3 py-2 rounded-xl border border-white/20 flex items-center gap-1.5 transition cursor-pointer">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Reconnect</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="teleconsult-overlay-hud z-20 pointer-events-none">
+          <div class="flex justify-between items-start pointer-events-auto">
+            <div class="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-xs flex items-center gap-2 border border-white/10">
+              <span class="audio-bars"><span class="audio-bar"></span><span class="audio-bar"></span><span class="audio-bar"></span></span>
+              <span>ASHA: Sunita Devi &amp; Patient</span>
+            </div>
+            <div class="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-xs flex items-center gap-1.5 border border-white/10">
+              <span class="text-emerald-400 font-bold">● HD 720p Live</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Picture in Picture (Self Camera - Doctor) -->
+        <div class="teleconsult-pip z-30 shadow-lg border-2 border-sky-400">
+          <video id="doctorLocalVideo" class="w-full h-full object-cover" autoplay playsinline muted></video>
+          <canvas id="doctorPipCanvas" class="w-full h-full object-cover hidden"></canvas>
+          <span class="absolute bottom-1 left-1.5 bg-black/70 text-[9px] text-white px-1.5 py-0.5 rounded font-bold pointer-events-none">You (Dr.)</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="call-controls-row">
+        <button id="docMuteBtn" onclick="toggleCallMute('doctor')" class="call-btn-circle call-btn-secondary" title="Mute/Unmute Microphone">
+          <i class="fa-solid fa-microphone"></i>
+        </button>
+        <button id="docVideoBtn" onclick="toggleCallVideo('doctor')" class="call-btn-circle call-btn-secondary" title="Camera On/Off">
+          <i class="fa-solid fa-video"></i>
+        </button>
+        <button onclick="toggleCallChat()" class="call-btn-circle call-btn-secondary relative" title="Toggle Live Chat">
+          <i class="fa-solid fa-comments"></i>
+          <span id="chatUnreadDot" class="hidden absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white"></span>
+        </button>
+        <button onclick="renderRecordTimeline();showDoctor('doctor-record')" class="call-btn-circle call-btn-secondary" title="View Patient History">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+        </button>
+        <button onclick="endCall('doctor')" class="call-btn-circle call-btn-end" title="End &amp; Complete">
+          <i class="fa-solid fa-phone-slash"></i>
+        </button>
+      </div>
+
+      <!-- In-Call Two-Way Clinical Chat Panel (Collapsible) -->
+      <div id="teleconsultChatPanel" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 mb-4">
+        <div class="flex items-center justify-between pb-2 border-b border-gray-100 mb-2">
+          <div class="flex items-center gap-1.5">
+            <i class="fa-solid fa-comment-medical text-doctor text-xs"></i>
+            <span class="text-xs font-bold text-gray-800">Two-Way Teleconsult Chat &amp; Clinical Notes</span>
+          </div>
+          <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded">Encrypted Live Link</span>
+        </div>
+        <div id="callChatMessages" class="h-32 overflow-y-auto space-y-2 p-1 text-xs mb-2 bg-gray-50/70 rounded-xl border border-gray-100">
+          <div class="flex flex-col items-start">
+            <span class="text-[9px] text-gray-400 font-semibold mb-0.5">Sunita Devi (ASHA) · 02:10</span>
+            <div class="bg-white border border-gray-200 text-gray-700 px-2.5 py-1.5 rounded-xl rounded-tl-none max-w-[85%] text-xs shadow-2xs">
+              Doctor saab, patient has high fever since 2 days and breathing is fast.
+            </div>
+          </div>
+          <div class="flex flex-col items-end">
+            <span class="text-[9px] text-sky-600 font-semibold mb-0.5">You (Dr. Rajesh) · 02:12</span>
+            <div class="bg-doctor text-white px-2.5 py-1.5 rounded-xl rounded-tr-none max-w-[85%] text-xs shadow-2xs">
+              Check chest auscultation and start 40% oxygen support immediately.
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <input type="text" id="callChatInput" placeholder="Type clinical advice or note..." onkeydown="if(event.key==='Enter') sendCallChatMessage()" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-doctor">
+          <button onclick="sendCallChatMessage()" class="bg-doctor text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-sky-700 transition flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-paper-plane mr-1"></i>Send
+          </button>
+        </div>
+      </div>
+
+      <!-- In-Call Prescription & Diagnostic Order Pad -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="bg-gray-50 p-3 rounded-xl text-xs text-gray-700 mb-3 border border-gray-100">
+          <p><strong>Frontline Vitals:</strong> BP: 150/95 mmHg · Pulse: 98 bpm · SpO2: 94%</p>
+          <p class="mt-1"><strong>Presenting Symptoms:</strong> High fever (102°F), productive cough, breathlessness</p>
+        </div>
+
+        <div class="flex gap-2 mb-3">
+          <button onclick="showDoctor('doctor-diagnostics')" class="flex-1 bg-sky-50 border border-doctor text-doctor text-xs font-bold py-2.5 rounded-xl touch-target hover:bg-sky-100 transition">
+            <i class="fa-solid fa-vial mr-1.5"></i>Order Lab Diagnostics
+          </button>
+          <button onclick="showToast('Expedited Cardiology referral dispatched to District Hospital.')" class="flex-1 bg-red-50 border border-danger text-danger text-xs font-bold py-2.5 rounded-xl touch-target hover:bg-red-100 transition">
+            <i class="fa-solid fa-route mr-1.5"></i>Route Critical Referral
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-xs font-semibold text-gray-700">Digital e-Prescription &amp; Pharmacy Dispensing</label>
+          <span class="text-[10px] text-doctor font-bold bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200">Patient: Ramesh Patil</span>
+        </div>
+
+        <!-- Quick Essential Medicine Selection Pills -->
+        <div class="mb-2.5">
+          <p class="text-[10px] text-gray-500 font-medium mb-1.5">Select stock to dispense (auto-deducted from Central Inventory):</p>
+          <div class="grid grid-cols-2 gap-1.5 text-xs">
+            <label class="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:border-doctor transition">
+              <input type="checkbox" id="rxMedAmox" checked class="accent-doctor w-4 h-4 rounded">
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-gray-800 truncate">Amoxicillin 500mg</p>
+                <p class="text-[10px] text-gray-500">10 capsules (1-0-1)</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:border-doctor transition">
+              <input type="checkbox" id="rxMedPara" checked class="accent-doctor w-4 h-4 rounded">
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-gray-800 truncate">Paracetamol 650mg</p>
+                <p class="text-[10px] text-gray-500">10 tablets (SOS)</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:border-doctor transition">
+              <input type="checkbox" id="rxMedORS" class="accent-doctor w-4 h-4 rounded">
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-gray-800 truncate">Oral Rehydration (ORS)</p>
+                <p class="text-[10px] text-gray-500">2 packets hydration</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:border-doctor transition">
+              <input type="checkbox" id="rxMedIFA" class="accent-doctor w-4 h-4 rounded">
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-gray-800 truncate">Iron &amp; Folic Acid</p>
+                <p class="text-[10px] text-gray-500">10 strips nutritional</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <textarea id="doctorRxInput" rows="2" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-doctor resize-none mb-3" placeholder="Additional clinical instructions...">Tab. Amoxicillin 500mg - 1-0-1 (5 days)
+Tab. Paracetamol 650mg - 1-0-1 (SOS Fever)
+Refer to District Hospital for chest X-ray &amp; ECG</textarea>
+
+        <button id="completeConsultBtn" onclick="completeConsultation()" class="w-full bg-doctor text-white font-bold py-3.5 rounded-xl shadow-md touch-target hover:bg-sky-700 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-check-double"></i><span>Sign &amp; Issue e-Prescription</span>
+        </button>
+      </div>
+    </main>
+
+    <!-- Doctor Diagnostics Coordination -->
+    <main id="doctor-diagnostics" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showDoctor('doctor-consult')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h2 class="text-lg font-bold text-dark leading-tight">Diagnostic Coordination</h2>
+          <p class="text-xs text-gray-500">Order &amp; track clinical lab investigations across facilities</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <label class="text-xs font-semibold text-gray-700 mb-2 block">Select Diagnostic Orders for Ramesh Patil</label>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="bg-sky-50 text-doctor text-xs font-semibold px-3 py-2 rounded-full border border-sky-200">Chest X-Ray (PA View)</span>
+          <span class="bg-sky-50 text-doctor text-xs font-semibold px-3 py-2 rounded-full border border-sky-200">12-Lead ECG</span>
+          <span class="bg-sky-50 text-doctor text-xs font-semibold px-3 py-2 rounded-full border border-sky-200">CBC &amp; ESR</span>
+        </div>
+        <button onclick="showToast('Orders transmitted to District Diagnostic Hub.')" class="w-full bg-doctor text-white text-xs font-bold py-3 rounded-xl touch-target hover:bg-sky-700 transition">
+          <i class="fa-solid fa-paper-plane mr-1.5"></i>Dispatch Orders to Nearest Diagnostic Centre
+        </button>
+      </div>
+
+      <h3 class="text-sm font-bold text-gray-800 mb-2">Pending District Lab Results</h3>
+      <div class="space-y-2">
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+          <div>
+            <h4 class="text-sm font-bold text-gray-800">Priya Sharma — Hemoglobin</h4>
+            <p class="text-xs text-gray-500">Ordered 2 days ago · Rural Hospital Lab</p>
+          </div>
+          <span class="bg-amber-100 text-warning text-xs font-bold px-2.5 py-1 rounded-lg">Sample Processing</span>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+          <div>
+            <h4 class="text-sm font-bold text-gray-800">Amit Singh — Fasting Blood Sugar</h4>
+            <p class="text-xs text-gray-500">Ordered yesterday · PHC Lab</p>
+          </div>
+          <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-lg">Result Ready: 112 mg/dL</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Doctor Longitudinal Record -->
+    <main id="doctor-record" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showDoctor('doctor-consult')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h2 class="text-lg font-bold text-dark leading-tight">Patient Longitudinal Record</h2>
+          <p class="text-xs text-gray-500">Unified Multi-Facility Electronic Health Record</p>
+        </div>
+      </div>
+      <div id="recordTimeline2"></div>
+    </main>
+
+    <!-- Doctor Fixed Nav -->
+    <nav class="doctor-nav">
+      <button onclick="showDoctor('doctor-queue')" class="nav-item text-doctor"><i class="fa-solid fa-list-check text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Queue</span></button>
+      <button onclick="showDoctor('doctor-diagnostics')" class="nav-item"><i class="fa-solid fa-vial text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Diagnostics</span></button>
+      <button onclick="showToast('Facility schedule: 32 appointments booked today.')" class="nav-item"><i class="fa-solid fa-calendar-days text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Schedule</span></button>
+      <button onclick="switchWorkplace()" class="nav-item text-gray-400 hover:text-danger"><i class="fa-solid fa-arrow-right-from-bracket text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Exit</span></button>
+    </nav>
+  </div>
+
+  <!-- =========================================================== 3. FACILITY ADMIN VIEW =========================================================== -->
+  <div id="app-facility" class="app-view">
+
+    <!-- Facility Operations Dashboard -->
+    <main id="facility-dashboard" class="flex-1">
+      <!-- Profile Hero Banner with Hospital Facility Backdrop -->
+      <div class="hero-card-facility p-5 text-white mb-5 relative overflow-hidden">
+        <svg class="hero-backdrop-watermark w-36 h-36" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm3 5h2V9h2v2h2v2h-2v2h-2v-2H9v-2z"/>
+        </svg>
+        <p class="text-xs font-medium uppercase tracking-wider text-amber-100 mb-1 relative z-10">District Quality &amp; Operations</p>
+        <div class="flex justify-between items-start relative z-10">
+          <div>
+            <h2 id="facilityHeroUserName" class="text-2xl font-bold text-white mb-0.5">PHC Ward 4</h2>
+            <p id="facilityHeroWorkplace" class="text-xs text-amber-100">Superintendent Dashboard · 4 Sub-Centres Connected</p>
+          </div>
+          <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shrink-0">
+            <i class="fa-solid fa-hospital text-xl text-white"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rural Hospital & Health Logistics Panorama Figure Card -->
+      <div class="rural-figure-card facility-figure mb-5">
+        <div class="figure-image-wrapper">
+          <img src="https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?auto=format&fit=crop&w=1200&q=80" alt="Rural Hospital Facility" class="figure-bg-img" referrerpolicy="no-referrer">
+          <div class="figure-gradient-overlay facility-overlay"></div>
+          <div class="figure-content">
+            <div class="flex items-center justify-between mb-2">
+              <span class="figure-chip bg-amber-950/80 text-amber-300 border border-amber-500/30">
+                <i class="fa-solid fa-hospital text-amber-400"></i> District Hospital &amp; PHC Hub
+              </span>
+              <span class="text-[11px] text-white/90 font-medium bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-md">
+                24x7 Emergency Ready
+              </span>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1">Rural Health Logistics &amp; Emergency Command</h3>
+            <p class="text-xs text-white/85 mb-3 max-w-md">Coordinating oxygen reserves, critical ICU and general bed capacity, and rural ambulance transfers across 4 peripheral sub-centres.</p>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="figure-stat-box">
+                <span class="text-sm font-bold text-white">18 Beds</span>
+                <span class="text-[10px] text-amber-200">General Vacant</span>
+              </div>
+              <div class="figure-stat-box">
+                <span class="text-sm font-bold text-white">4 ICU Beds</span>
+                <span class="text-[10px] text-amber-200">Equipped with O2</span>
+              </div>
+              <div class="figure-stat-box">
+                <span class="text-sm font-bold text-amber-300">2 Ambulances</span>
+                <span class="text-[10px] text-amber-200">Standby GPS Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Core Performance Figures Grid -->
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+          <p class="text-2xl font-black text-facility">88%</p>
+          <p class="text-xs text-gray-700 font-semibold">Referral Completion</p>
+          <p class="text-[10px] text-gray-500 mt-0.5">Target: 85% met</p>
+        </div>
+        <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+          <p class="text-2xl font-black text-facility">92%</p>
+          <p class="text-xs text-gray-700 font-semibold">High-Risk Follow-up</p>
+          <p class="text-[10px] text-gray-500 mt-0.5">Within 48h protocol</p>
+        </div>
+        <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+          <p class="text-2xl font-black text-facility">14 min</p>
+          <p class="text-xs text-gray-700 font-semibold">Avg Wait Time</p>
+          <p class="text-[10px] text-gray-500 mt-0.5">-6m from last month</p>
+        </div>
+        <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+          <p class="text-2xl font-black text-facility">126</p>
+          <p class="text-xs text-gray-700 font-semibold">Teleconsults</p>
+          <p class="text-[10px] text-gray-500 mt-0.5">Conducted this week</p>
+        </div>
+      </div>
+
+      <!-- Bed & Oxygen Capacity Figure with Real-Time Allocation Manager -->
+      <div class="metric-figure-box mb-4">
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-bed-pulse text-facility"></i>Live Facility Bed &amp; Oxygen Allocation Manager
+          </h4>
+          <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">24x7 Real-time</span>
+        </div>
+        
+        <div class="space-y-3 text-xs mb-4">
+          <!-- General Ward -->
+          <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+            <div class="flex justify-between text-[11px] text-gray-700 font-semibold mb-1">
+              <span>General Wards (<span id="genBedOccupied">34</span> / <span id="genBedTotal">40</span> Beds Occupied)</span>
+              <span id="genBedPct" class="text-facility font-bold">85%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden mb-2">
+              <div id="genBedBar" class="bg-facility h-full rounded-full transition-all duration-500" style="width: 85%"></div>
+            </div>
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="text-gray-500"><strong id="genBedVacant" class="text-gray-800 font-bold">6</strong> Vacant beds available</span>
+              <div class="flex gap-1.5">
+                <button onclick="allocateBed('general')" class="bg-white border border-facility text-facility font-bold px-2 py-1 rounded-lg hover:bg-amber-50 transition">
+                  <i class="fa-solid fa-plus mr-1"></i>Admit Patient
+                </button>
+                <button onclick="dischargeBed('general')" class="bg-white border border-gray-300 text-gray-600 font-medium px-2 py-1 rounded-lg hover:bg-gray-100 transition">
+                  Discharge
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ICU & Ventilator Ward -->
+          <div class="bg-amber-50/50 p-2.5 rounded-xl border border-amber-200">
+            <div class="flex justify-between text-[11px] text-gray-700 font-semibold mb-1">
+              <span>Emergency ICU &amp; Ventilator (<span id="icuBedOccupied">11</span> / <span id="icuBedTotal">15</span> Beds Occupied)</span>
+              <span id="icuBedPct" class="text-danger font-bold">73%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden mb-2">
+              <div id="icuBedBar" class="bg-danger h-full rounded-full transition-all duration-500" style="width: 73%"></div>
+            </div>
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="text-amber-800"><strong id="icuBedVacant" class="font-bold text-danger">4</strong> Critical ICU beds ready</span>
+              <div class="flex gap-1.5">
+                <button onclick="allocateBed('icu')" class="bg-danger text-white font-bold px-2 py-1 rounded-lg hover:bg-red-700 transition shadow-xs">
+                  <i class="fa-solid fa-truck-medical mr-1"></i>Reserve for Ambulance 108
+                </button>
+                <button onclick="dischargeBed('icu')" class="bg-white border border-gray-300 text-gray-600 font-medium px-2 py-1 rounded-lg hover:bg-gray-100 transition">
+                  Release
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Oxygen Reserves -->
+          <div class="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-200">
+            <div class="flex justify-between text-[11px] text-gray-700 font-semibold mb-1">
+              <span>Oxygen High-Flow Reserves (<span id="o2CylinderOccupied">18</span> / <span id="o2CylinderTotal">20</span> Cylinders Full)</span>
+              <span id="o2CylinderPct" class="text-emerald-700 font-bold">90%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden mb-2">
+              <div id="o2CylinderBar" class="bg-emerald-600 h-full rounded-full transition-all duration-500" style="width: 90%"></div>
+            </div>
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="text-emerald-800"><strong id="o2CylinderVacant" class="font-bold">2</strong> In-use on emergency transport</span>
+              <div class="flex gap-1.5">
+                <button onclick="allocateBed('oxygen')" class="bg-emerald-700 text-white font-bold px-2 py-1 rounded-lg hover:bg-emerald-800 transition shadow-xs">
+                  <i class="fa-solid fa-lungs mr-1"></i>Dispatch O2
+                </button>
+                <button onclick="dischargeBed('oxygen')" class="bg-white border border-gray-300 text-gray-600 font-medium px-2 py-1 rounded-lg hover:bg-gray-100 transition">
+                  Refill
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-time Bed Allocation Event Log -->
+        <div class="bg-white p-2.5 rounded-xl border border-gray-200 text-xs">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 block mb-1.5">Recent Allocation Actions</span>
+          <div id="bedAllocationLogs" class="space-y-1.5 text-[11px] text-gray-600">
+            <div class="flex justify-between items-center bg-gray-50 px-2 py-1 rounded">
+              <span><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>ICU Bed #4 assigned to incoming Ambulance MH-12-108</span>
+              <span class="text-[9px] text-gray-400 font-mono">14m ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quality Alerts -->
+      <h3 class="text-sm font-bold text-gray-800 mb-2">Quality &amp; Supply Alerts</h3>
+      <div class="space-y-2 mb-4">
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border-l-4 border-danger flex items-center gap-3">
+          <i class="fa-solid fa-triangle-exclamation text-danger text-base"></i>
+          <p class="text-xs text-gray-700 flex-1 leading-normal">
+            <strong>Referral Alert:</strong> 2 transfers pending transit &gt;24h between Rural Hospital &amp; District Hospital.
+          </p>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border-l-4 border-warning flex items-center gap-3">
+          <i class="fa-solid fa-pills text-warning text-base"></i>
+          <p class="text-xs text-gray-700 flex-1 leading-normal">
+            <strong>Stock Shortage:</strong> Sub-Centre 4 has 0 packets of Oral Rehydration Salts.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="showFacility('facility-referrals')" class="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center gap-1.5 touch-target hover:border-facility transition">
+          <div class="bg-amber-50 text-facility w-10 h-10 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-route"></i></div>
+          <span class="text-[11px] font-bold text-gray-800">Referrals</span>
+        </button>
+        <button onclick="showFacility('facility-stock')" class="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center gap-1.5 touch-target hover:border-facility transition">
+          <div class="bg-amber-50 text-facility w-10 h-10 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-boxes-stacked"></i></div>
+          <span class="text-[11px] font-bold text-gray-800">Logistics</span>
+        </button>
+        <button onclick="showFacility('facility-outbreak')" class="bg-white p-3.5 rounded-2xl shadow-sm border border-red-200 bg-red-50/20 flex flex-col items-center gap-1.5 touch-target hover:border-danger transition">
+          <div class="bg-red-50 text-danger w-10 h-10 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-virus-covid animate-pulse"></i></div>
+          <span class="text-[11px] font-bold text-danger">CMO Heatmap</span>
+        </button>
+      </div>
+    </main>
+
+    <!-- Facility CMO Outbreak & Epidemic Surveillance Heatmap (District GIS Hub) -->
+    <main id="facility-outbreak" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showFacility('facility-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h2 class="text-lg font-bold text-dark leading-tight">District CMO Epidemic Surveillance</h2>
+          <p class="text-xs text-gray-500">IDSP automated syndromic clustering &amp; GIS early warning radar</p>
+        </div>
+      </div>
+
+      <!-- District Threat Status Badge -->
+      <div class="bg-gradient-to-r from-red-600 to-amber-600 text-white p-3.5 rounded-2xl shadow-sm mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-white text-base">
+            <i class="fa-solid fa-triangle-exclamation animate-bounce"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider">Active District Vector Alert</h4>
+            <p class="text-[11px] text-red-100">Satara District · 3 Syndromic Hotspots Detected</p>
+          </div>
+        </div>
+        <span class="bg-white text-red-700 text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-xs">
+          THREAT: HIGH
+        </span>
+      </div>
+
+      <!-- District Vitals Quick Row -->
+      <div class="grid grid-cols-4 gap-2 mb-4 text-center">
+        <div class="bg-white p-2 rounded-xl border border-gray-200">
+          <span class="text-[9px] text-gray-500 font-semibold block">Screened (7d)</span>
+          <p id="cmoScreenedCount" class="text-sm font-black text-gray-800">428</p>
+        </div>
+        <div class="bg-red-50 p-2 rounded-xl border border-red-200">
+          <span class="text-[9px] text-red-600 font-semibold block">Fever Spike</span>
+          <p id="cmoFeverCount" class="text-sm font-black text-danger">84</p>
+        </div>
+        <div class="bg-amber-50 p-2 rounded-xl border border-amber-200">
+          <span class="text-[9px] text-amber-700 font-semibold block">Dyspnea / Resp.</span>
+          <p id="cmoRespCount" class="text-sm font-black text-warning">41</p>
+        </div>
+        <div class="bg-blue-50 p-2 rounded-xl border border-blue-200">
+          <span class="text-[9px] text-blue-700 font-semibold block">108 Dispatches</span>
+          <p id="cmoDispatchCount" class="text-sm font-black text-doctor">11</p>
+        </div>
+      </div>
+
+      <!-- Hospital Inbound Emergency Referrals & Bed Allocator -->
+      <div id="hospitalIncomingReferralsCard" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="flex items-center justify-between pb-2.5 border-b border-gray-100 mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-sm border border-red-200">
+              <i class="fa-solid fa-truck-medical animate-pulse"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-xs font-bold text-gray-900">Hospital Inbound Emergency Referrals</h4>
+                <span id="hospitalInboundBadge" class="bg-red-100 text-danger text-[9px] font-black px-2 py-0.5 rounded-full uppercase">Live Inbound</span>
+              </div>
+              <p class="text-[10px] text-gray-500">Destination: <span class="font-bold text-dark">District Hospital Diagnostic & Emergency Hub</span></p>
+            </div>
+          </div>
+          <button onclick="refreshHospitalIncomingReferrals()" class="text-[10px] font-bold text-blue-700 hover:text-blue-900 px-2.5 py-1 rounded-lg border border-blue-200 bg-blue-50 flex items-center gap-1">
+            <i class="fa-solid fa-arrows-rotate"></i><span>Refresh</span>
+          </button>
+        </div>
+
+        <div id="hospitalIncomingList" class="space-y-3">
+          <!-- Populated by JavaScript and live listener -->
+          <div class="bg-red-50/70 border-2 border-red-200 rounded-xl p-3.5 space-y-2.5">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h5 class="text-sm font-black text-gray-900">Ramesh Patil</h5>
+                  <span class="bg-red-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">CRITICAL</span>
+                </div>
+                <p class="text-[11px] text-gray-600">ABHA: 12-3456-7890 · From Sub-Centre 4 (ASHA Sunita Devi)</p>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] font-black text-red-700 bg-red-100 px-2 py-0.5 rounded-md block">Ambulance ETA: 14m</span>
+                <span class="text-[9px] text-gray-500">MH-12-AMB-108</span>
+              </div>
+            </div>
+
+            <!-- Clinical Regulation Summary -->
+            <div class="bg-white p-2.5 rounded-lg border border-red-100 text-[11px] space-y-1">
+              <div class="flex items-center justify-between text-gray-700 font-semibold">
+                <span>Vitals: BP 150/95 · SpO2 94% · Pulse 98 bpm</span>
+                <span class="text-danger font-bold">Risk: 8/10 (High)</span>
+              </div>
+              <p class="text-gray-600 text-[10px] italic">ICMR Regulation: Stage-2 Hypertension &amp; Borderline Hypoxemia. Priority emergency transfer mandated.</p>
+            </div>
+
+            <!-- Transport & Bed Status -->
+            <div class="grid grid-cols-2 gap-2 text-[11px]">
+              <div class="bg-white p-2 rounded-lg border border-gray-200">
+                <span class="text-[9px] text-gray-500 block">108 Driver Contact</span>
+                <span class="font-bold text-gray-800">Santosh (+91 98220 10811)</span>
+              </div>
+              <div id="hospitalBedSlot_ref-1" class="bg-emerald-50 p-2 rounded-lg border border-emerald-200">
+                <span class="text-[9px] text-emerald-700 block font-semibold">Hospital Bed Allocation</span>
+                <span class="font-bold text-emerald-800 flex items-center gap-1"><i class="fa-solid fa-bed-pulse"></i> ICU Bed #4 Reserved</span>
+              </div>
+            </div>
+
+            <!-- Hospital Staff Actions -->
+            <div class="flex gap-2 pt-1">
+              <button onclick="reserveEmergencyBedForReferral('ref-1', 'ICU Oxygen Bed', 'ICU Bed #4')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1 shadow-xs">
+                <i class="fa-solid fa-bed"></i><span>Reserve Emergency ICU Bed</span>
+              </button>
+              <button onclick="confirmHospitalIntake('ref-1')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1 shadow-xs">
+                <i class="fa-solid fa-clipboard-check"></i><span>Confirm Intake &amp; Admit</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive GIS Cluster Radar Map -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="flex justify-between items-center mb-2.5">
+          <div class="flex items-center gap-1.5">
+            <i class="fa-solid fa-map-location-dot text-danger"></i>
+            <h4 class="text-xs font-bold text-gray-800">Geospatial Cluster Density Map</h4>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="refreshCmoClusters()" class="text-[10px] font-bold text-gray-600 hover:text-dark px-2 py-0.5 rounded border border-gray-200 bg-gray-50">
+              <i class="fa-solid fa-arrows-rotate mr-1"></i>Re-scan
+            </button>
+          </div>
+        </div>
+
+        <!-- SVG Heatmap Visualization Canvas -->
+        <div class="relative bg-slate-900 rounded-xl overflow-hidden h-52 border border-slate-700 shadow-inner">
+          <svg id="cmoHeatmapSvg" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Radial gradient for hotspot clusters -->
+              <radialGradient id="hotspotDengue" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#EF4444" stop-opacity="0.8" />
+                <stop offset="50%" stop-color="#EF4444" stop-opacity="0.35" />
+                <stop offset="100%" stop-color="#EF4444" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="hotspotGastro" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.75" />
+                <stop offset="60%" stop-color="#F59E0B" stop-opacity="0.25" />
+                <stop offset="100%" stop-color="#F59E0B" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="hotspotViral" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.65" />
+                <stop offset="70%" stop-color="#3B82F6" stop-opacity="0.2" />
+                <stop offset="100%" stop-color="#3B82F6" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+
+            <!-- District Contour Base Map Background -->
+            <path d="M 30,30 Q 150,10 280,35 T 450,20 Q 480,90 470,160 T 360,190 Q 200,210 80,180 Z" fill="#1E293B" stroke="#334155" stroke-width="1.5" />
+            
+            <!-- River / Waterway Vector -->
+            <path d="M 20,80 Q 140,95 240,120 T 470,110" fill="none" stroke="#0369A1" stroke-width="3" stroke-dasharray="4 2" opacity="0.6" />
+            <text x="250" y="115" fill="#38BDF8" font-size="8" font-style="italic">Krishna River Tributary</text>
+
+            <!-- Cluster 1: Rampur Ward 4 (Dengue / Critical) -->
+            <g class="cursor-pointer" onclick="selectCmoCluster('cls-01')">
+              <circle cx="160" cy="80" r="45" fill="url(#hotspotDengue)" class="cluster-pulse-critical" />
+              <circle cx="160" cy="80" r="8" fill="#DC2626" stroke="#FFFFFF" stroke-width="2" />
+              <text x="160" y="72" fill="#FCA5A5" font-size="9" font-weight="bold" text-anchor="middle">Rampur Ward 4</text>
+              <text x="160" y="98" fill="#FEE2E2" font-size="8" font-weight="extrabold" text-anchor="middle">19 cases (+68%)</text>
+            </g>
+
+            <!-- Cluster 2: Shirwal East (Gastro / High) -->
+            <g class="cursor-pointer" onclick="selectCmoCluster('cls-02')">
+              <circle cx="340" cy="65" r="36" fill="url(#hotspotGastro)" />
+              <circle cx="340" cy="65" r="7" fill="#D97706" stroke="#FFFFFF" stroke-width="1.5" />
+              <text x="340" y="55" fill="#FCD34D" font-size="9" font-weight="bold" text-anchor="middle">Shirwal East</text>
+              <text x="340" y="82" fill="#FEF3C7" font-size="8" text-anchor="middle">14 cases (+35%)</text>
+            </g>
+
+            <!-- Cluster 3: Wai Valley (Viral URTI / Moderate) -->
+            <g class="cursor-pointer" onclick="selectCmoCluster('cls-03')">
+              <circle cx="270" cy="155" r="30" fill="url(#hotspotViral)" />
+              <circle cx="270" cy="155" r="6" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.5" />
+              <text x="270" y="146" fill="#93C5FD" font-size="9" font-weight="bold" text-anchor="middle">Wai Valley</text>
+              <text x="270" y="171" fill="#DBEAFE" font-size="8" text-anchor="middle">8 cases (+12%)</text>
+            </g>
+          </svg>
+
+          <!-- Heatmap Legend Overlay -->
+          <div class="absolute bottom-2 right-2 bg-slate-950/85 backdrop-blur-sm p-2 rounded-lg border border-slate-700 text-[9px] text-slate-300 space-y-1">
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span><span>Critical Vector (Dengue/AFI)</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span><span>Waterborne Cluster (Gastro)</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span>Seasonal Respiratory</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selected Cluster Deep-Dive & Action Dispatcher -->
+      <div id="cmoClusterDetailCard" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex justify-between items-start mb-2">
+          <div>
+            <span class="text-[9px] font-bold uppercase tracking-wider text-danger">Cluster Detail #CLS-01</span>
+            <h4 id="clusterTitle" class="text-sm font-bold text-gray-900">Ward 4 Rampur — Sub-Centre 4 Sector</h4>
+            <p id="clusterDisease" class="text-xs text-gray-500">Dengue &amp; Acute Febrile Illness · 19 cases reported in 7 days</p>
+          </div>
+          <span id="clusterBadge" class="bg-red-100 text-danger text-[10px] font-extrabold px-2.5 py-1 rounded-full">
+            CRITICAL SPIKE
+          </span>
+        </div>
+
+        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 mb-3 space-y-1.5">
+          <span class="text-[10px] font-bold text-gray-700 block">IDSP Protocol Actions Mandated:</span>
+          <ul id="clusterActionsList" class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+            <li>Immediate thermal fogging across Ward 4 perimeter</li>
+            <li>Dispatch 200 additional NS1 Rapid Antigen test kits to PHC</li>
+            <li>ASHA door-to-door larval surveillance sweep</li>
+          </ul>
+        </div>
+
+        <div class="flex gap-2">
+          <button onclick="dispatchOutbreakIntervention()" class="flex-1 bg-danger hover:bg-red-700 text-white text-xs font-bold py-2.5 rounded-xl touch-target transition flex items-center justify-center gap-1.5 shadow-xs">
+            <i class="fa-solid fa-bullhorn"></i><span>Issue Rapid Response Order</span>
+          </button>
+          <button onclick="showFacility('facility-stock')" class="bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold px-3 py-2.5 rounded-xl touch-target hover:bg-amber-100 transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-box-open"></i><span>Stock Kits</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Facility Referral Pipeline -->
+    <main id="facility-referrals" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showFacility('facility-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h2 class="text-lg font-bold text-dark leading-tight">District Referral Pipeline</h2>
+          <p class="text-xs text-gray-500">Live multi-facility transfer tracking</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-4 gap-2 text-center mb-4">
+        <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100"><p class="text-lg font-black text-gray-800">6</p><p class="text-[9px] text-gray-500 font-semibold">Initiated</p></div>
+        <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-100"><p class="text-lg font-black text-warning">4</p><p class="text-[9px] text-amber-700 font-semibold">In Transit</p></div>
+        <div class="bg-red-50 p-2.5 rounded-xl border border-red-100"><p class="text-lg font-black text-danger">2</p><p class="text-[9px] text-red-700 font-semibold">Overdue</p></div>
+        <div class="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100"><p class="text-lg font-black text-emerald-700">31</p><p class="text-[9px] text-emerald-700 font-semibold">Completed</p></div>
+      </div>
+
+      <div id="facilityReferralList" class="space-y-3">
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+          <div>
+            <h4 class="text-sm font-bold text-gray-800">Ramesh Patil</h4>
+            <p class="text-xs text-gray-500">Sub-Centre 4 → District Hospital · Transport active</p>
+          </div>
+          <span class="bg-amber-100 text-warning text-xs font-bold px-2.5 py-1 rounded-lg">Overdue 26h</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Facility Medicine Availability -->
+    <main id="facility-stock" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showFacility('facility-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h2 class="text-lg font-bold text-dark leading-tight">Warehouse Medicine Logistics</h2>
+          <p class="text-xs text-gray-500">Inventory levels across connected sub-centres</p>
+        </div>
+      </div>
+
+      <div id="facilityStockList" class="space-y-3">
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100">
+          <div class="flex justify-between mb-1">
+            <h4 class="text-sm font-bold text-gray-800">Sub-Centre 4</h4>
+            <span class="bg-red-100 text-danger text-xs font-bold px-2 py-0.5 rounded">1 Out of Stock</span>
+          </div>
+          <p class="text-xs text-gray-500">Oral Rehydration Salts — 0 packets remaining</p>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100">
+          <div class="flex justify-between mb-1">
+            <h4 class="text-sm font-bold text-gray-800">PHC Ward 4 Central</h4>
+            <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded">Stocked</span>
+          </div>
+          <p class="text-xs text-gray-500">All essential antibiotics &amp; analgesics above safe buffer</p>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100">
+          <div class="flex justify-between mb-1">
+            <h4 class="text-sm font-bold text-gray-800">District Hospital Pharmacy</h4>
+            <span class="bg-amber-100 text-warning text-xs font-bold px-2 py-0.5 rounded">1 Low Stock</span>
+          </div>
+          <p class="text-xs text-gray-500">Insulin Regular — 40 vials (threshold 60 vials)</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Facility Fixed Nav -->
+    <nav class="facility-nav">
+      <button onclick="showFacility('facility-dashboard')" class="nav-item text-facility"><i class="fa-solid fa-gauge-high text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Dashboard</span></button>
+      <button onclick="showFacility('facility-referrals')" class="nav-item"><i class="fa-solid fa-route text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Referrals</span></button>
+      <button onclick="showFacility('facility-stock')" class="nav-item"><i class="fa-solid fa-boxes-stacked text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Stock</span></button>
+      <button onclick="showFacility('facility-outbreak')" class="nav-item"><i class="fa-solid fa-virus-covid text-lg mb-0.5"></i><span class="text-[10px] font-semibold">CMO Radar</span></button>
+      <button onclick="switchWorkplace()" class="nav-item text-gray-400 hover:text-danger"><i class="fa-solid fa-arrow-right-from-bracket text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Exit</span></button>
+    </nav>
+  </div>
+
+  <!-- =========================================================== 4. PATIENT VIEW =========================================================== -->
+  <div id="app-patient" class="app-view">
+
+    <!-- Patient Dashboard -->
+    <main id="patient-dashboard" class="flex-1">
+      <!-- Profile Hero Banner with Patient Wellness Backdrop -->
+      <div class="hero-card-patient p-5 text-white mb-5 relative overflow-hidden">
+        <svg class="hero-backdrop-watermark w-36 h-36" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+        <p class="text-xs font-medium uppercase tracking-wider text-indigo-100 mb-1 relative z-10">Digital Health Locker</p>
+        <div class="flex justify-between items-start relative z-10">
+          <div>
+            <h2 id="patientHeroUserName" class="text-2xl font-bold text-white mb-0.5">Damodar Kumar Singh</h2>
+            <p id="patientHeroWorkplace" class="text-xs text-indigo-100">ABHA ID: 91-8507-4746-3815 · Ayushman Bharat</p>
+          </div>
+          <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shrink-0">
+            <i class="fa-solid fa-id-card text-xl text-white"></i>
+          </div>
+        </div>
+        <div class="mt-4 flex gap-2 flex-wrap relative z-10">
+          <span id="patientHeroApptBadge" class="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 border border-white/10">
+            <i class="fa-solid fa-calendar-check text-indigo-200"></i><span id="patientHeroApptText">Appt Today 2:00 PM</span>
+          </span>
+          <span id="patientHeroDoctorBadge" class="bg-emerald-400/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-bold text-slate-900 flex items-center gap-1.5 border border-emerald-300/40">
+            <i class="fa-solid fa-video"></i><span id="patientHeroDoctorText">Doctor Ready</span>
+          </span>
+          <span id="patientHeroReferralBadge" class="bg-red-500 text-white px-2.5 py-1 rounded-lg text-xs font-black flex items-center gap-1.5 border border-red-300/40 shadow-xs animate-pulse">
+            <i class="fa-solid fa-truck-medical"></i><span id="patientHeroReferralBadgeText">Referred to District Hospital</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Active Emergency Referral Status Card for Patient -->
+      <div id="patientReferralStatusContainer" class="bg-gradient-to-br from-red-50 to-amber-50 border-2 border-red-300 rounded-2xl p-4 shadow-sm mb-5 animate-fade-in">
+        <div class="flex items-start justify-between pb-3 border-b border-red-200 mb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-red-600 text-white flex items-center justify-center text-base shadow-sm">
+              <i class="fa-solid fa-truck-medical animate-bounce"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-black uppercase tracking-wider text-red-700">Official Clinical Referral</span>
+                <span id="patientRefPriorityBadge" class="bg-red-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">CRITICAL</span>
+              </div>
+              <h3 class="text-sm font-black text-gray-900 leading-tight">Emergency Hospital Transfer Active</h3>
+            </div>
+          </div>
+          <span id="patientRefStageBadge" class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+            <span id="patientRefStageText">108 En Route</span>
+          </span>
+        </div>
+
+        <!-- Target Referred Facility Highlight -->
+        <div class="bg-white p-3 rounded-xl border border-red-200 mb-3 shadow-xs">
+          <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wide block mb-0.5">Referred Target Facility:</span>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-hospital text-red-600 text-base"></i>
+              <div>
+                <h4 id="patientReferralFacilityName" class="text-sm font-black text-gray-900">District Hospital Diagnostic &amp; Emergency Hub</h4>
+                <p id="patientReferralOrigin" class="text-[11px] text-gray-600">Referred from: Sub-Centre 4 (ASHA Sunita Devi) · Under ICMR Emergency Protocol</p>
+              </div>
+            </div>
+            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded-lg shrink-0">Direct Admission</span>
+          </div>
+        </div>
+
+        <!-- 4-Stage Pathway Stepper -->
+        <div class="bg-white/80 p-3 rounded-xl border border-red-100 mb-3">
+          <span class="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-2">Multi-Facility Transfer Pipeline</span>
+          <div class="grid grid-cols-4 gap-1 text-center">
+            <div class="p-1 rounded-lg bg-emerald-50 border border-emerald-200">
+              <i class="fa-solid fa-check text-emerald-600 text-xs"></i>
+              <p class="text-[9px] font-bold text-gray-800 mt-0.5">1. Sub-Centre</p>
+              <p class="text-[8px] text-emerald-700">Triaged</p>
+            </div>
+            <div class="p-1 rounded-lg bg-emerald-50 border border-emerald-200">
+              <i class="fa-solid fa-check text-emerald-600 text-xs"></i>
+              <p class="text-[9px] font-bold text-gray-800 mt-0.5">2. PHC Tele</p>
+              <p class="text-[8px] text-emerald-700">Approved</p>
+            </div>
+            <div class="p-1 rounded-lg bg-amber-100 border-2 border-amber-400 shadow-xs">
+              <i class="fa-solid fa-truck-fast text-amber-700 text-xs animate-pulse"></i>
+              <p class="text-[9px] font-black text-amber-900 mt-0.5">3. 108 Transit</p>
+              <p class="text-[8px] font-extrabold text-amber-800">14m ETA</p>
+            </div>
+            <div class="p-1 rounded-lg bg-blue-50 border border-blue-200">
+              <i class="fa-solid fa-bed text-blue-600 text-xs"></i>
+              <p class="text-[9px] font-bold text-gray-800 mt-0.5">4. Hospital</p>
+              <p class="text-[8px] text-blue-700">Bed Ready</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Vitals & Bed Reservation Status -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3 text-xs">
+          <div class="bg-white p-2.5 rounded-xl border border-gray-200">
+            <span class="text-[10px] text-gray-500 font-semibold block">108 Ambulance Details</span>
+            <p id="patientReferralAmbulance" class="font-bold text-gray-900">MH-12-AMB-108</p>
+            <p id="patientReferralDriver" class="text-[11px] text-gray-600">Driver: Santosh Jadhav (+91 98220 10811)</p>
+          </div>
+          <div class="bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
+            <span class="text-[10px] text-emerald-700 font-semibold block">Hospital Bed Reservation</span>
+            <p id="patientReferralBedStatus" class="font-bold text-emerald-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-bed-pulse text-emerald-600"></i> ICU Bed #4 Reserved
+            </p>
+            <p class="text-[11px] text-emerald-700">Oxygen Port &amp; Resuscitation Team Alerted</p>
+          </div>
+        </div>
+
+        <!-- Clinical Regulation Assessment Findings -->
+        <div class="bg-white p-2.5 rounded-xl border border-red-200 mb-3 text-xs space-y-1">
+          <div class="flex justify-between items-center text-gray-700 font-semibold">
+            <span>Triage Vitals: <strong id="patientReferralVitals">BP: 150/95 · SpO2: 94% · Pulse: 98 bpm</strong></span>
+            <span class="text-danger font-black">ICMR Score: 8/10</span>
+          </div>
+          <p id="patientReferralRegulationText" class="text-[11px] text-gray-600">
+            ICMR Directive: Borderline Hypoxemia with Stage-2 Hypertension. High-risk referral mandated under National Health Mission guidelines.
+          </p>
+        </div>
+
+        <!-- Emergency Instructions & Actions -->
+        <div class="flex gap-2">
+          <a href="tel:108" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-phone"></i><span>Call 108 Dispatch</span>
+          </a>
+          <button onclick="togglePatientReferralDossier()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-file-waveform"></i><span>Digital Referral Slip</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Village Wellness Centre & Patient Care Panorama Figure Card -->
+      <div class="rural-figure-card patient-figure mb-5">
+        <div class="figure-image-wrapper">
+          <img src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80" alt="Patient Rural Health Consultation" class="figure-bg-img" referrerpolicy="no-referrer">
+          <div class="figure-gradient-overlay patient-overlay"></div>
+          <div class="figure-content">
+            <div class="flex items-center justify-between mb-2">
+              <span class="figure-chip bg-indigo-950/80 text-indigo-300 border border-indigo-500/30">
+                <i class="fa-solid fa-heart-pulse text-indigo-400"></i> Ayushman Arogya Mandir
+              </span>
+              <span class="text-[11px] text-white/90 font-medium bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-md">
+                ABHA Verified
+              </span>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1">Your Village Healthcare &amp; Wellness Hub</h3>
+            <p class="text-xs text-white/85 mb-3 max-w-md">Connect directly with primary doctors from your village, store lab reports and verified digital prescriptions in your Ayushman Bharat health account.</p>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="figure-stat-box">
+                <span id="patientAssignedDoctorName" class="text-sm font-bold text-white">Dr. Rajesh Kumar</span>
+                <span class="text-[10px] text-indigo-200">Assigned Doctor</span>
+              </div>
+              <div class="figure-stat-box">
+                <span id="patientQueueToken" class="text-sm font-bold text-white">Token #04</span>
+                <span class="text-[10px] text-indigo-200">Current Queue</span>
+              </div>
+              <div class="figure-stat-box">
+                <span class="text-sm font-bold text-indigo-300">Free Meds</span>
+                <span class="text-[10px] text-indigo-200">At PHC Dispensary</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Patient Actions -->
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <button onclick="showPatient('patient-booking')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 touch-target hover:border-patient transition">
+          <div class="bg-indigo-50 text-patient w-12 h-12 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-plus"></i></div>
+          <span class="text-xs font-bold text-gray-800 text-center">Book Care</span>
+          <span class="text-[10px] text-gray-500 text-center">Appointments &amp; Queue</span>
+        </button>
+        <button onclick="showPatient('patient-teleconsult')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 touch-target hover:border-patient transition">
+          <div class="bg-indigo-50 text-patient w-12 h-12 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-video"></i></div>
+          <span class="text-xs font-bold text-gray-800 text-center">Join Teleconsult</span>
+          <span class="text-[10px] text-gray-500 text-center">Live with Dr. Rajesh</span>
+        </button>
+        <button onclick="renderRecordTimeline();showPatient('patient-record')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 touch-target hover:border-patient transition">
+          <div class="bg-indigo-50 text-patient w-12 h-12 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-file-medical"></i></div>
+          <span class="text-xs font-bold text-gray-800 text-center">Health Record</span>
+          <span class="text-[10px] text-gray-500 text-center">Prescriptions &amp; history</span>
+        </button>
+        <button onclick="openAbhaCardModal()" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 touch-target hover:border-patient transition">
+          <div class="bg-emerald-50 text-emerald-700 w-12 h-12 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-id-badge"></i></div>
+          <span class="text-xs font-bold text-gray-800 text-center">ABHA Health Card</span>
+          <span class="text-[10px] text-gray-500 text-center">View &amp; Print Card</span>
+        </button>
+      </div>
+    </main>
+
+    <!-- Patient Booking & Queue Status -->
+    <main id="patient-booking" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showPatient('patient-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h2 class="text-lg font-bold text-dark leading-tight">Book Appointment</h2>
+          <p class="text-xs text-gray-500">Schedule in-person or teleconsultation care</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <label class="text-xs font-semibold text-gray-700 mb-1.5 block">Select Health Facility</label>
+        <select class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-semibold mb-3">
+          <option>PHC Ward 4 — Dr. Rajesh Kumar</option>
+          <option>District Hospital — Cardiology Department</option>
+        </select>
+
+        <label class="text-xs font-semibold text-gray-700 mb-1.5 block">Select Preferred Consultation Slot</label>
+        <div class="grid grid-cols-3 gap-2 mb-4">
+          <button type="button" class="border border-patient text-patient text-xs font-bold py-2.5 rounded-xl bg-indigo-50">2:00 PM</button>
+          <button type="button" class="border border-gray-200 text-gray-600 text-xs font-semibold py-2.5 rounded-xl">3:30 PM</button>
+          <button type="button" class="border border-gray-200 text-gray-600 text-xs font-semibold py-2.5 rounded-xl">5:00 PM</button>
+        </div>
+
+        <button onclick="confirmPatientBooking()" class="w-full bg-patient text-white font-bold py-3.5 rounded-xl shadow-md touch-target hover:bg-indigo-700 transition">
+          Confirm Teleconsult Appointment
+        </button>
+      </div>
+
+      <div id="queueStatus" class="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-xs text-gray-800 font-semibold">Appointment confirmed for 2:00 PM</p>
+          <span class="bg-indigo-100 text-patient text-[10px] font-bold px-2 py-0.5 rounded-full">#3 in Queue</span>
+        </div>
+        <p class="text-xs text-gray-600 mb-2">Estimated wait time: <strong>12 minutes</strong>.</p>
+        <div class="w-full bg-white rounded-full h-2.5 overflow-hidden">
+          <div class="bg-patient h-full rounded-full" style="width: 60%"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Patient Teleconsultation Video Suite -->
+    <main id="patient-teleconsult" class="flex-1" style="display:none;">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <button onclick="showPatient('patient-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+          <div>
+            <h2 class="text-lg font-bold text-dark leading-tight">Patient Teleconsultation</h2>
+            <p id="patientTeleconsultSubtitle" class="text-xs text-gray-500">Live Video Consultation with Dr. Rajesh Kumar</p>
+          </div>
+        </div>
+        <div class="pulse-live-indicator">
+          <span class="live-dot-ping"></span>
+          <span id="callTimerPatient">04:18</span>
+        </div>
+      </div>
+
+      <!-- Real-time Video Stream Container -->
+      <div class="teleconsult-video-container relative bg-slate-950 overflow-hidden">
+        <video id="patientRemoteVideo" class="teleconsult-video-feed w-full h-full object-cover hidden" autoplay playsinline></video>
+        <canvas id="patientVideoCanvas" class="teleconsult-video-feed w-full h-full object-cover absolute inset-0 hidden"></canvas>
+
+        <!-- Connecting / Waiting Overlay -->
+        <div id="patCallWaitingOverlay" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center text-white z-10">
+          <div class="w-16 h-16 rounded-full bg-indigo-500/20 flex items-center justify-center text-2xl text-indigo-400 border border-indigo-400/40 mb-3">
+            <i class="fa-solid fa-user-doctor"></i>
+          </div>
+          <h4 class="text-base font-bold mb-1">Teleconsultation Link Active</h4>
+          <p class="text-xs text-gray-300 max-w-xs mb-3">Connecting with PHC Medical Officer...</p>
+          <div class="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-950/70 border border-indigo-500/40 px-3 py-1.5 rounded-full font-medium">
+            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
+            <span id="patCallStatusBadge">Connecting with PHC Medical Officer...</span>
+          </div>
+          <div class="flex gap-2 mt-4 flex-wrap justify-center pointer-events-auto">
+            <button id="patCallConnectBtn" onclick="window.PulseCall && window.PulseCall.initiateCall('patient')" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md flex items-center gap-2 transition cursor-pointer">
+              <i class="fa-solid fa-phone"></i>
+              <span>Connect with Doctor</span>
+            </button>
+            <button onclick="window.PulseCall && window.PulseCall.reconnectCall('patient')" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-gray-200 text-xs px-3 py-2 rounded-xl border border-white/20 flex items-center gap-1.5 transition cursor-pointer">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Reconnect</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="teleconsult-overlay-hud z-20 pointer-events-none">
+          <div class="flex justify-between items-start pointer-events-auto">
+            <div class="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-xs flex items-center gap-2 border border-white/10">
+              <span class="audio-bars"><span class="audio-bar"></span><span class="audio-bar"></span><span class="audio-bar"></span></span>
+              <span>Dr. Rajesh Kumar (PHC)</span>
+            </div>
+            <div class="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-xs flex items-center gap-1.5 border border-white/10">
+              <span class="text-emerald-400 font-bold">● High Speed</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="teleconsult-pip z-30 shadow-lg border-2 border-indigo-400">
+          <video id="patientLocalVideo" class="w-full h-full object-cover" autoplay playsinline muted></video>
+          <canvas id="patientPipCanvas" class="w-full h-full object-cover hidden"></canvas>
+          <span class="absolute bottom-1 left-1.5 bg-black/70 text-[9px] text-white px-1.5 py-0.5 rounded font-bold pointer-events-none">You</span>
+        </div>
+      </div>
+
+      <!-- Call Controls -->
+      <div class="call-controls-row">
+        <button id="patMuteBtn" onclick="toggleCallMute('patient')" class="call-btn-circle call-btn-secondary" title="Mute/Unmute"><i class="fa-solid fa-microphone"></i></button>
+        <button id="patVideoBtn" onclick="toggleCallVideo('patient')" class="call-btn-circle call-btn-secondary" title="Camera On/Off"><i class="fa-solid fa-video"></i></button>
+        <button onclick="switchCamera('patient')" class="call-btn-circle call-btn-secondary" title="Switch Camera"><i class="fa-solid fa-camera-rotate"></i></button>
+        <button onclick="endCall('patient')" class="call-btn-circle call-btn-end" title="End Call"><i class="fa-solid fa-phone-slash"></i></button>
+      </div>
+
+      <!-- Doctor Live Advice -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <h3 class="text-sm font-bold text-gray-800 mb-1.5">Doctor's Direct Guidance</h3>
+        <p class="text-xs text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">
+          "Please take your prescribed medicines on time. An automated referral has been routed for your Chest X-ray at District Hospital. Keep warm and hydrate."
+        </p>
+      </div>
+    </main>
+
+    <!-- Patient Longitudinal Record -->
+    <main id="patient-record" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showPatient('patient-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h2 class="text-lg font-bold text-dark leading-tight">My Digital Health History</h2>
+          <p class="text-xs text-gray-500">ABHA Linked Records across all clinics and hospitals</p>
+        </div>
+      </div>
+      <div id="recordTimeline3"></div>
+    </main>
+
+    <!-- Patient Meds & Diagnostics -->
+    <main id="patient-meds" class="flex-1" style="display:none;">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="showPatient('patient-dashboard')" class="text-gray-500 touch-target w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+        <div>
+          <h2 class="text-lg font-bold text-dark leading-tight">Active Medications &amp; Tests</h2>
+          <p class="text-xs text-gray-500">Current treatment plan and scheduled lab appointments</p>
+        </div>
+      </div>
+
+      <h3 class="text-sm font-bold text-gray-800 mb-2">Prescribed Medications</h3>
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3 mb-4">
+        <div class="flex justify-between items-center border-b border-gray-100 pb-2.5">
+          <div>
+            <h4 class="text-xs font-bold text-gray-800">Amoxicillin 500mg</h4>
+            <p class="text-[10px] text-gray-500">1 capsule morning, 1 night · 5 days</p>
+          </div>
+          <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-lg">Active</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <div>
+            <h4 class="text-xs font-bold text-gray-800">Paracetamol 650mg</h4>
+            <p class="text-[10px] text-gray-500">SOS for fever/pain relief</p>
+          </div>
+          <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-lg">Active</span>
+        </div>
+      </div>
+
+      <h3 class="text-sm font-bold text-gray-800 mb-2">Diagnostic Tests Scheduled</h3>
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex justify-between items-center">
+          <div>
+            <h4 class="text-xs font-bold text-gray-800">Chest X-Ray (PA View)</h4>
+            <p class="text-[10px] text-gray-500">Ordered by Dr. Rajesh Kumar · District Diagnostic Hub</p>
+          </div>
+          <span class="bg-amber-100 text-warning text-xs font-bold px-2.5 py-1 rounded-lg">Scheduled</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Patient Fixed Nav -->
+    <nav class="patient-nav">
+      <button onclick="showPatient('patient-dashboard')" class="nav-item text-patient"><i class="fa-solid fa-house text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Home</span></button>
+      <button onclick="showPatient('patient-booking')" class="nav-item"><i class="fa-solid fa-calendar-plus text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Book</span></button>
+      <button onclick="renderRecordTimeline();showPatient('patient-record')" class="nav-item"><i class="fa-solid fa-file-medical text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Records</span></button>
+      <button onclick="showPatient('patient-meds')" class="nav-item"><i class="fa-solid fa-prescription-bottle-medical text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Meds</span></button>
+      <button onclick="switchWorkplace()" class="nav-item text-gray-400 hover:text-danger"><i class="fa-solid fa-arrow-right-from-bracket text-lg mb-0.5"></i><span class="text-[10px] font-semibold">Exit</span></button>
+    </nav>
+  </div>
+
+</div>
+
+<!-- Universal PWA Install Modal Guide -->
+<div id="pwaInstallModal" class="ios-install-modal hidden" role="dialog" aria-modal="true" aria-labelledby="pwaModalTitle">
+  <div class="ios-modal-box">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-mobile-screen"></i>
+        </div>
+        <div>
+          <h3 id="pwaModalTitle" class="text-base font-bold text-gray-900">Install Pulse Predictor</h3>
+          <p class="text-xs text-gray-500">Fast offline access on your phone</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeInstallModal()" class="text-gray-400 hover:text-gray-600 text-lg w-8 h-8 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Dynamic instructions based on platform -->
+    <div id="iosInstallSteps" class="hidden space-y-2.5 text-xs text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-200 mb-4">
+      <p class="flex items-start gap-2">
+        <span class="font-bold text-emerald-700">1.</span>
+        <span>Tap the <strong>Share</strong> button <i class="fa-solid fa-arrow-up-from-bracket text-doctor ml-1"></i> in the Safari bottom toolbar.</span>
+      </p>
+      <p class="flex items-start gap-2">
+        <span class="font-bold text-emerald-700">2.</span>
+        <span>Scroll down the action sheet and tap <strong>Add to Home Screen</strong> (<i class="fa-regular fa-square-plus"></i>).</span>
+      </p>
+      <p class="flex items-start gap-2">
+        <span class="font-bold text-emerald-700">3.</span>
+        <span>Tap <strong>Add</strong> in the top right corner. The app will launch full screen!</span>
+      </p>
+    </div>
+
+    <div id="genericInstallSteps" class="space-y-2.5 text-xs text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-200 mb-4">
+      <p class="flex items-start gap-2">
+        <span class="font-bold text-emerald-700">1.</span>
+        <span>Tap the browser menu button <i class="fa-solid fa-ellipsis-vertical text-emerald-700 mx-1"></i> in your browser toolbar.</span>
+      </p>
+      <p class="flex items-start gap-2">
+        <span class="font-bold text-emerald-700">2.</span>
+        <span>Select <strong>Install app</strong> or <strong>Add to Home screen</strong>.</span>
+      </p>
+      <p class="flex items-start gap-2">
+        <span class="font-bold text-emerald-700">3.</span>
+        <span>Confirm prompt. Pulse Predictor will be added to your home screen with 100% offline access.</span>
+      </p>
+    </div>
+
+    <div class="flex gap-2">
+      <a href="/" target="_blank" class="flex-1 text-center bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl touch-target hover:bg-emerald-800 transition">
+        <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Open in New Tab
+      </a>
+      <button type="button" onclick="closeInstallModal()" class="flex-1 bg-gray-100 text-gray-800 text-xs font-bold py-3 rounded-xl touch-target hover:bg-gray-200 transition">
+        Got It, Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Frontline Patient Registration & ABHA ID Modal -->
+<div id="registerPatientModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="registerModalTitle">
+  <div class="bg-white w-full max-w-md rounded-2xl p-5 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-asha flex items-center justify-center text-lg">
+          <i class="fa-solid fa-id-card-clip"></i>
+        </div>
+        <div>
+          <h3 id="registerModalTitle" class="text-base font-bold text-gray-900">Register New Patient</h3>
+          <p class="text-[11px] text-gray-500">Sub-Centre 4 · Longitudinal Ayushman ABHA Sync</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeRegisterPatientModal()" class="text-gray-400 hover:text-gray-600 text-lg w-8 h-8 rounded-full flex items-center justify-center touch-target">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- ABHA ID Generator / Scanner -->
+    <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 mb-4">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+          <i class="fa-solid fa-qrcode text-asha"></i>ABHA Number (Health ID)
+        </span>
+        <button type="button" onclick="generateNewABHA()" class="text-[10px] font-bold text-asha hover:underline bg-white px-2 py-0.5 rounded border border-emerald-200 shadow-2xs">
+          Generate New
+        </button>
+      </div>
+      <input type="text" id="newPatientAbha" value="91-4402-8819-2041" class="w-full bg-white border border-emerald-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-emerald-900 focus:outline-none focus:border-asha">
+      <p class="text-[10px] text-emerald-700 mt-1">Directly links to National Health Stack &amp; offline sub-centre register.</p>
+    </div>
+
+    <!-- Registration Fields -->
+    <div class="space-y-3 mb-5">
+      <div>
+        <label class="block text-xs font-bold text-gray-700 mb-1">Full Name *</label>
+        <input type="text" id="newPatientName" placeholder="e.g. Meera Devi" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-asha text-gray-800">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Age *</label>
+          <input type="number" id="newPatientAge" placeholder="e.g. 34" min="0" max="110" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-asha text-gray-800">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Gender *</label>
+          <select id="newPatientGender" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-asha text-gray-800">
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+            <option value="Child/Infant">Child/Infant</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-700 mb-1">Village / Ward *</label>
+        <input type="text" id="newPatientVillage" value="Sub-Centre 4 · Rampur" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-asha text-gray-800">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-700 mb-1">Contact Phone Number</label>
+        <input type="tel" id="newPatientPhone" placeholder="+91 98765 43210" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-asha text-gray-800">
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-2">
+      <button type="button" onclick="closeRegisterPatientModal()" class="flex-1 bg-gray-100 text-gray-700 text-xs font-bold py-3 rounded-xl touch-target hover:bg-gray-200 transition">
+        Cancel
+      </button>
+      <button type="button" id="savePatientBtn" onclick="saveNewPatient()" class="flex-1 bg-asha text-white text-xs font-bold py-3 rounded-xl touch-target hover:bg-emerald-700 transition flex items-center justify-center gap-1.5 shadow-md">
+        <i class="fa-solid fa-user-check"></i><span>Save &amp; Start Triage</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ABHA e-Health Card Modal (Printable / Offline Physical Card View) -->
+<div id="abhaCardModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden animate-fade-in">
+  <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-gray-100 p-5">
+    <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm">
+          <i class="fa-solid fa-id-card"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-gray-900 leading-none">Ayushman Bharat ABHA Card</h3>
+          <p class="text-[10px] text-gray-500 mt-0.5">National Health Authority · Government of India</p>
+        </div>
+      </div>
+      <button onclick="closeAbhaCardModal()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Printable ABHA ID Badge Container -->
+    <div id="printableAbhaCard" class="bg-gradient-to-br from-indigo-900 via-sky-900 to-emerald-900 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden mb-4 border border-white/20">
+      <!-- Watermark emblem -->
+      <div class="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
+        <i class="fa-solid fa-heart-pulse text-[180px]"></i>
+      </div>
+
+      <!-- Card Header -->
+      <div class="flex justify-between items-start mb-4 relative z-10">
+        <div>
+          <span class="text-[9px] font-bold uppercase tracking-widest text-emerald-300 block">Ministry of Health &amp; Family Welfare</span>
+          <h4 class="text-xs font-bold text-white tracking-wide">NATIONAL DIGITAL HEALTH MISSION</h4>
+        </div>
+        <div class="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded text-[9px] font-mono font-bold text-emerald-200 border border-white/20">
+          ABHA CARD
+        </div>
+      </div>
+
+      <!-- Photo & Bio Details -->
+      <div class="flex gap-4 items-center mb-4 relative z-10">
+        <div class="w-16 h-20 rounded-xl bg-white/10 border-2 border-white/30 flex flex-col items-center justify-center shrink-0 relative overflow-hidden">
+          <i class="fa-solid fa-user text-2xl text-indigo-200"></i>
+          <span class="text-[8px] text-emerald-200 mt-1 uppercase font-semibold">Verified</span>
+        </div>
+        <div class="space-y-1">
+          <h3 id="patientCardUserName" class="text-base font-extrabold text-white leading-tight">Damodar Kumar Singh</h3>
+          <p id="patientCardBio" class="text-[11px] text-slate-200">Age: 38 Years · Gender: Male</p>
+          <p id="patientCardVillage" class="text-[10px] text-slate-300">Village: Sub-Centre 4 · Ward 4, Rampur</p>
+          <p class="text-[10px] text-slate-300">DOB: 14/08/1988</p>
+        </div>
+      </div>
+
+      <!-- ABHA Number & QR Section -->
+      <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/15 flex justify-between items-center relative z-10">
+        <div>
+          <span class="text-[9px] text-emerald-300 font-bold uppercase tracking-wider block">ABHA Number</span>
+          <span id="patientCardAbhaNumber" class="text-sm font-mono font-bold tracking-wider text-white">91-8507-4746-3815</span>
+          <span id="patientCardAbhaAddress" class="text-[9px] text-slate-300 block mt-0.5">ABHA Address: damodar.singh@abdm</span>
+        </div>
+        <!-- Mock QR Code -->
+        <div class="w-12 h-12 bg-white rounded-lg p-1 shrink-0 flex items-center justify-center shadow-sm">
+          <i class="fa-solid fa-qrcode text-3xl text-gray-900"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-2">
+      <button onclick="window.print()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-3 rounded-xl touch-target transition flex items-center justify-center gap-1.5 shadow-md">
+        <i class="fa-solid fa-print"></i><span>Print / Save PDF</span>
+      </button>
+      <button onclick="showToast('ABHA Digital Card shared with patient via SMS / WhatsApp link!'); closeAbhaCardModal();" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl touch-target transition flex items-center justify-center gap-1.5 shadow-md">
+        <i class="fa-solid fa-share-nodes"></i><span>Share to Mobile</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================== 6. VOICE-TO-TEXT CLINICAL DICTATION MODAL =========================================================== -->
+<div id="voiceDictationModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl p-5 sm:p-6 w-full max-w-md shadow-2xl border border-gray-100 max-h-[92vh] overflow-y-auto">
+    <div class="flex justify-between items-center pb-3 border-b border-gray-100 mb-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-red-50 text-danger flex items-center justify-center text-lg border border-red-200">
+          <i class="fa-solid fa-microphone"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-gray-900 leading-tight">AI Voice Clinical Dictation</h3>
+          <p class="text-[10px] text-gray-500">Dictate symptoms &amp; vitals in Hindi / Marathi / English</p>
+        </div>
+      </div>
+      <button onclick="closeVoiceDictationModal()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Dictation Language & Quick Phrases -->
+    <div class="flex items-center justify-between bg-gray-50 p-2 rounded-xl mb-3 border border-gray-200">
+      <span class="text-[11px] font-semibold text-gray-700">Dictation Dialect:</span>
+      <select id="voiceLanguageSelect" class="bg-white text-xs font-bold text-gray-800 border border-gray-300 rounded-lg px-2 py-1 focus:outline-none">
+        <option value="hi-IN" selected>हिंदी (Hindi)</option>
+        <option value="mr-IN">मराठी (Marathi)</option>
+        <option value="en-IN">English (Indian)</option>
+      </select>
+    </div>
+
+    <!-- Audio Recording Animation & Live Mic Box -->
+    <div class="flex flex-col items-center justify-center py-4 px-2 bg-gradient-to-b from-red-50/50 to-white rounded-2xl border border-red-100 mb-3 text-center">
+      <div id="micRecordingHalo" class="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center text-2xl mb-2 cursor-pointer shadow-lg transition-transform" onclick="toggleSpeechRecording()">
+        <i id="micIcon" class="fa-solid fa-microphone"></i>
+      </div>
+      <p id="micStatusText" class="text-xs font-bold text-gray-800 mt-1">Tap microphone to begin speaking</p>
+      <p id="micSubPrompt" class="text-[10px] text-gray-500 mt-0.5 max-w-xs">
+        "Mरीज का नाम रमेश पाटिल, बुखार 102, बीपी 150/95, सांस फूल रही है..."
+      </p>
+    </div>
+
+    <!-- Live Spoken Transcript -->
+    <div class="mb-3">
+      <label class="text-[11px] font-bold text-gray-700 block mb-1">Live Audio Transcript (Spoken Text):</label>
+      <textarea id="voiceTranscriptInput" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs text-gray-800 focus:outline-none focus:border-red-400 font-sans" placeholder="Spoken speech transcript will appear here in real-time..."></textarea>
+    </div>
+
+    <!-- Quick Voice Simulation Preset Buttons -->
+    <div class="mb-4">
+      <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Quick Clinical Audio Presets:</span>
+      <div class="grid grid-cols-2 gap-1.5">
+        <button type="button" onclick="loadVoiceSample('fever_bp')" class="text-left bg-gray-50 hover:bg-gray-100 p-1.5 rounded-lg border border-gray-200 text-[10px] font-medium text-gray-700 truncate">
+          🎙️ High BP &amp; Fever (Hindi)
+        </button>
+        <button type="button" onclick="loadVoiceSample('dyspnea_spo2')" class="text-left bg-gray-50 hover:bg-gray-100 p-1.5 rounded-lg border border-gray-200 text-[10px] font-medium text-gray-700 truncate">
+          🎙️ Breathless SpO2 92% (Marathi)
+        </button>
+      </div>
+    </div>
+
+    <!-- Extracted Structured Entities Preview -->
+    <div id="extractedEntitiesBox" class="hidden bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 mb-4 space-y-2">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-900 block">AI Standardized Clinical Fields:</span>
+      <div class="grid grid-cols-2 gap-1.5 text-[11px] text-gray-700">
+        <div><strong>Patient:</strong> <span id="vExtractedName" class="text-emerald-800">-</span></div>
+        <div><strong>BP:</strong> <span id="vExtractedBP" class="text-emerald-800">-</span></div>
+        <div><strong>Pulse:</strong> <span id="vExtractedPulse" class="text-emerald-800">-</span></div>
+        <div><strong>SpO2:</strong> <span id="vExtractedSpO2" class="text-emerald-800">-</span></div>
+      </div>
+      <div class="text-[11px]">
+        <strong>Symptoms:</strong> <span id="vExtractedSymptoms" class="text-emerald-800">-</span>
+      </div>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="flex gap-2">
+      <button id="processVoiceBtn" onclick="processVoiceDictation()" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-3 rounded-xl touch-target transition flex items-center justify-center gap-1.5 shadow-md">
+        <i class="fa-solid fa-wand-magic-sparkles"></i><span>Extract &amp; Populate Triage</span>
+      </button>
+      <button onclick="closeVoiceDictationModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-4 py-3 rounded-xl touch-target transition">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================== 7. OFFLINE SYNC CONFLICT RESOLUTION MODAL =========================================================== -->
+<div id="syncConflictModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl border border-gray-100 max-h-[92vh] overflow-y-auto">
+    <div class="flex justify-between items-center pb-3 border-b border-gray-100 mb-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-amber-50 text-warning flex items-center justify-center text-lg border border-amber-200">
+          <i class="fa-solid fa-code-compare"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-gray-900 leading-tight">Offline Sync &amp; Conflict Visualizer</h3>
+          <p class="text-[10px] text-gray-500">IndexedDB local queue vs. Cloud Firestore remote version</p>
+        </div>
+      </div>
+      <button onclick="closeSyncConflictModal()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Storage Diagnostics -->
+    <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 mb-4 flex items-center justify-between text-xs">
+      <div>
+        <span class="text-[10px] text-gray-500 font-semibold block">Active Offline Engine</span>
+        <strong class="text-gray-800">IndexedDB (`pulse_health_offline_db`)</strong>
+      </div>
+      <div class="text-right">
+        <span class="text-[10px] text-gray-500 font-semibold block">Queued Records</span>
+        <strong id="conflictOutboxCount" class="text-amber-600">0 Items</strong>
+      </div>
+    </div>
+
+    <!-- Diff Visualizer Container -->
+    <div id="conflictDiffContainer" class="space-y-4 mb-4">
+      <div class="text-xs font-bold text-gray-700 mb-1 flex items-center gap-1.5">
+        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+        <span>Conflict Detected: Patient Triage Record #TRG-9021</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <!-- Local IndexedDB Copy -->
+        <div class="bg-amber-50/80 p-3 rounded-xl border border-amber-200">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-extrabold uppercase text-amber-900">Local (ASHA Outbox)</span>
+            <span class="text-[9px] text-amber-700">10:14 AM</span>
+          </div>
+          <div class="space-y-1 text-gray-800 text-[11px]">
+            <p><strong>Patient:</strong> Ramesh Patil</p>
+            <p><strong>Vitals:</strong> BP 155/98 · SpO2 93%</p>
+            <p><strong>Risk Score:</strong> <span class="text-red-700 font-bold">8 (CRITICAL)</span></p>
+            <p><strong>Symptom:</strong> Breathlessness + Fever</p>
+            <p class="text-[9px] text-gray-500 italic mt-1">Recorded by ASHA Sunita Devi offline</p>
+          </div>
+          <button onclick="resolveConflict('local')" class="w-full mt-3 bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold py-1.5 rounded-lg transition">
+            Keep Local Version
+          </button>
+        </div>
+
+        <!-- Remote Cloud Firestore Copy -->
+        <div class="bg-sky-50/80 p-3 rounded-xl border border-sky-200">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-extrabold uppercase text-sky-900">Cloud (PHC Server)</span>
+            <span class="text-[9px] text-sky-700">10:02 AM</span>
+          </div>
+          <div class="space-y-1 text-gray-800 text-[11px]">
+            <p><strong>Patient:</strong> Ramesh Patil</p>
+            <p><strong>Vitals:</strong> BP 140/90 · SpO2 96%</p>
+            <p><strong>Risk Score:</strong> <span class="text-amber-700 font-bold">5 (MODERATE)</span></p>
+            <p><strong>Symptom:</strong> Mild Cough &amp; Cold</p>
+            <p class="text-[9px] text-gray-500 italic mt-1">Previous doctor intake record</p>
+          </div>
+          <button onclick="resolveConflict('remote')" class="w-full mt-3 bg-sky-600 hover:bg-sky-700 text-white text-[10px] font-bold py-1.5 rounded-lg transition">
+            Keep Cloud Version
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resolution Strategy Selection -->
+    <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 mb-4">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-gray-600 block mb-1.5">Automatic Conflict Resolution Policy:</span>
+      <div class="flex gap-2">
+        <button onclick="setConflictPolicy('timestamp')" id="policyTimestampBtn" class="flex-1 bg-white border border-emerald-500 text-emerald-800 font-bold text-[10px] py-1.5 rounded-lg shadow-xs">
+          Latest Timestamp Wins
+        </button>
+        <button onclick="setConflictPolicy('frontline')" id="policyFrontlineBtn" class="flex-1 bg-white border border-gray-300 text-gray-700 font-semibold text-[10px] py-1.5 rounded-lg">
+          Frontline ASHA Priority
+        </button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-2">
+      <button onclick="mergeAndSyncAllConflicts()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl touch-target transition flex items-center justify-center gap-1.5 shadow-md">
+        <i class="fa-solid fa-arrows-rotate"></i><span>Resolve &amp; Push to Cloud</span>
+      </button>
+      <button onclick="closeSyncConflictModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-4 py-3 rounded-xl touch-target transition">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Digital Emergency Referral Slip Modal for Patient & Hospital -->
+<div id="patientReferralModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-md rounded-2xl p-5 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-sm">
+          <i class="fa-solid fa-file-waveform"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-gray-900">National Health Mission Referral Slip</h3>
+          <p class="text-[10px] text-gray-500">Official Clinical Inter-Facility Directive</p>
+        </div>
+      </div>
+      <button onclick="closePatientReferralModal()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Referral Slip Printable Header -->
+    <div class="bg-red-50/70 border-2 border-red-200 rounded-xl p-3.5 mb-3 text-xs">
+      <div class="flex justify-between items-start mb-2">
+        <div>
+          <span class="text-[9px] font-black text-red-700 uppercase tracking-wider block">Target Facility (Hospital)</span>
+          <h4 id="modalSlipHospital" class="text-sm font-black text-gray-900">District Hospital Diagnostic & Emergency Hub</h4>
+          <p class="text-[10px] text-gray-600">Satara District · 24/7 Resuscitation & Emergency Intake</p>
+        </div>
+        <span class="bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase">Priority 1</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-red-200">
+        <div>
+          <span class="text-[9px] text-gray-500 block">Patient Name</span>
+          <strong id="modalSlipPatient">Ramesh Patil (48y / M)</strong>
+        </div>
+        <div>
+          <span class="text-[9px] text-gray-500 block">ABHA Health ID</span>
+          <strong id="modalSlipAbha">12-3456-7890</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clinical Triage Regulation Assessment -->
+    <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 mb-3 text-xs space-y-1.5">
+      <span class="text-[10px] font-bold text-gray-700 uppercase tracking-wide block">Clinical Findings at Sub-Centre</span>
+      <div class="grid grid-cols-3 gap-1 text-center">
+        <div class="bg-white p-1.5 rounded-lg border border-gray-200"><span class="text-[9px] text-gray-500 block">Blood Pressure</span><strong id="modalSlipBP">150/95</strong></div>
+        <div class="bg-white p-1.5 rounded-lg border border-gray-200"><span class="text-[9px] text-gray-500 block">Pulse Rate</span><strong id="modalSlipPulse">98 bpm</strong></div>
+        <div class="bg-white p-1.5 rounded-lg border border-gray-200"><span class="text-[9px] text-gray-500 block">SpO2 Oxygen</span><strong id="modalSlipSpo2">94%</strong></div>
+      </div>
+      <p id="modalSlipRegulation" class="text-[11px] text-gray-700 italic pt-1 leading-snug">
+        ICMR Rule 1.2 (Borderline Hypoxemia) & Rule 2.2 (Stage-2 Hypertension) triggered. Mandatory continuous oxygenation en route.
+      </p>
+    </div>
+
+    <!-- Transport & Hospital Allocation -->
+    <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 mb-4 text-xs space-y-1">
+      <span class="text-[10px] font-bold text-emerald-900 uppercase tracking-wide block">Logistics & Intake Reservation</span>
+      <div class="flex justify-between items-center text-[11px] text-emerald-800">
+        <span>108 Ambulance: <strong id="modalSlipAmbulance">MH-12-AMB-108</strong></span>
+        <span>Driver: <strong id="modalSlipDriver">Santosh (+91 98220 10811)</strong></span>
+      </div>
+      <div class="flex justify-between items-center text-[11px] text-emerald-800 pt-1 border-t border-emerald-200/60">
+        <span>Reserved Bed: <strong id="modalSlipBed">ICU Bed #4 (Oxygen Port Active)</strong></span>
+        <span class="text-emerald-700 font-bold">ETA: 14 mins</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-2">
+      <button onclick="window.print()" class="flex-1 bg-gray-900 hover:bg-black text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm">
+        <i class="fa-solid fa-print"></i><span>Print / Save PDF</span>
+      </button>
+      <button onclick="closePatientReferralModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-4 py-2.5 rounded-xl transition">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="assets/firebase-db.js"></script>
+<script src="assets/translations.js"></script>
+<script src="assets/webrtc-call.js"></script>
+<script src="assets/app.js" defer></script>
+</body>
+</html>

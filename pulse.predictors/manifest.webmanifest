@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "Pulse Predictor — Rural Health",
+  "short_name": "PulseHealth",
+  "description": "Rural healthcare access and quality platform connecting patients, ASHA workers, doctors, and facilities through a coordinated healthcare experience.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#0f766e",
+  "background_color": "#faf7f2",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["medical", "health", "productivity"]
+}

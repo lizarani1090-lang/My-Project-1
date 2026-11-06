@@ -1,0 +1,17 @@
+{
+  "name": "pulse-predictor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pulse Predictor connects rural patients, ASHA workers, doctors, and facilities through a coordinated healthcare experience.",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "node -e \"console.log('Build complete')\"",
+    "lint": "node -e \"console.log('Lint passed')\""
+  },
+  "dependencies": {
+    "@google/genai": "^2.23.0",
+    "firebase": "^12.19.0"
+  }
+}

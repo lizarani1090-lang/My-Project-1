@@ -1,0 +1,11 @@
+{
+  "name": "Pulse Predictor",
+  "description": "Rural healthcare access and quality platform connecting patients, ASHA workers, doctors, and facilities through a coordinated healthcare experience.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

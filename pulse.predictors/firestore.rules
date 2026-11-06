@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pulse Predictor Health Security Rules
+    
+    // Triage assessments
+    match /triage_cases/{triageId} {
+      allow read: if true;
+      allow create: if request.resource.data.patientName is string &&
+                       request.resource.data.riskScore is number &&
+                       request.resource.data.riskLevel in ['HIGH', 'MODERATE', 'LOW'];
+      allow update, delete: if true;
+    }
+
+    // Medicine and logistics inventory
+    match /inventory/{itemId} {
+      allow read: if true;
+      allow write: if request.resource.data.name is string &&
+                      request.resource.data.quantity is number;
+    }
+
+    // Referrals and transit
+    match /referrals/{referralId} {
+      allow read: if true;
+      allow write: if request.resource.data.patientName is string &&
+                      request.resource.data.sourceFacility is string;
+    }
+
+    // Consultations and e-prescriptions
+    match /consultations/{consultationId} {
+      allow read: if true;
+      allow write: if request.resource.data.patientName is string;
+    }
+
+    // Live WebRTC Video Calls & Signaling
+    match /video_calls/{callId} {
+      allow read, write: if true;
+
+      match /{subCollection}/{docId} {
+        allow read, write: if true;
+      }
+    }
+
+    // Registered village patients
+    match /patients/{patientId} {
+      allow read, write: if true;
+    }
+
+    // Registered user accounts across all workspaces
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if request.resource.data.name is string &&
+                       request.resource.data.email is string &&
+                       request.resource.data.role in ['asha', 'doctor', 'facility', 'patient'];
+      allow update, delete: if true;
+    }
+
+    // Test connection doc
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

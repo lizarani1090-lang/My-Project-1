@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pulse Predictor | Choose Workplace Portal</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0F766E">
+  <link rel="stylesheet" href="assets/login.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="login-home">
+  <header class="login-top-bar">
+    <button type="button" id="pwaInstallBtn" onclick="handlePWAInstall()" class="pwa-install-btn touch-target" title="Install application on phone">
+      <i class="fa-solid fa-cloud-arrow-down"></i>
+      <span>Install App</span>
+    </button>
+    <select id="languageSelector" onchange="setLanguage(this.value)" aria-label="Choose language" class="login-lang-select">
+      <option value="en">English</option>
+      <option value="hi">हिन्दी</option>
+      <option value="mr">मराठी</option>
+    </select>
+  </header>
+
+  <div class="login-shell">
+
+    <section class="login-visual">
+      <div class="brand-lockup">
+        <img src="logo.jpeg" alt="Pulse Predictor logo">
+        <div>
+          <strong>Pulse Predictor</strong>
+          <span>Rural Health Access &amp; Quality Platform</span>
+        </div>
+      </div>
+      <div class="visual-copy">
+        <div class="eyebrow">Enterprise Healthcare Network · 4 Dedicated Workplaces</div>
+        <h1>Care moves better together.</h1>
+        <p>A coordinated digital health network connecting frontline workers, primary doctors, facility administrators, and rural patients. Select your authorized workplace to sign in.</p>
+      </div>
+      <div class="visual-foot">Protected role-based workspaces · Authorized personnel only</div>
+    </section>
+
+    <main class="login-panel">
+      <section class="login-card">
+        <div class="role-chip"><span></span>Secure Role-Based Health Network</div>
+        <h2>Choose your workplace</h2>
+        <p>Select your authorized department to continue to your secure workplace.</p>
+
+        <div class="role-grid">
+          <!-- 1. ASHA Card -->
+          <a class="role-card" href="login-asha.html">
+            <div class="role-icon" style="background:#ccfbf1;color:#0f766e;"><i class="fa-solid fa-user-nurse"></i></div>
+            <strong>ASHA Worker</strong>
+            <span>Sub-Centre symptom capture, digital triage, &amp; referrals</span>
+          </a>
+
+          <!-- 2. Doctor Card -->
+          <a class="role-card" href="login-doctor.html">
+            <div class="role-icon" style="background:#e0f2fe;color:#0284c7;"><i class="fa-solid fa-user-doctor"></i></div>
+            <strong>Doctor / PHC</strong>
+            <span>Live teleconsult queue, e-prescriptions, &amp; diagnostics</span>
+          </a>
+
+          <!-- 3. Facility Card -->
+          <a class="role-card" href="login-facility.html">
+            <div class="role-icon" style="background:#fef3c7;color:#d97706;"><i class="fa-solid fa-hospital"></i></div>
+            <strong>Facility Admin</strong>
+            <span>Bed capacity, oxygen stock, &amp; ambulance tracking</span>
+          </a>
+
+          <!-- 4. Patient Card -->
+          <a class="role-card" href="login-patient.html">
+            <div class="role-icon" style="background:#eef2ff;color:#6366f1;"><i class="fa-solid fa-user"></i></div>
+            <strong>Patient Portal</strong>
+            <span>Book consults, token queue, &amp; unified ABHA record</span>
+          </a>
+        </div>
+
+        <div class="register-cta-banner">
+          <div>
+            <strong style="display: block; font-size: 0.82rem; color: #076456;"><i class="fa-solid fa-user-plus mr-1"></i> New to Pulse Predictor?</strong>
+            <p>Anyone can register an account for any workspace: ASHA, Doctor, Facility Admin, or Patient.</p>
+          </div>
+          <a href="register.html" style="background: linear-gradient(120deg, #076456, #0c8d78);">Register Now</a>
+        </div>
+
+        <div class="security-badge" style="margin-top: 1.25rem; padding: 0.85rem 1rem; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font-size: 0.78rem; color: #475569; display: flex; align-items: center; gap: 0.65rem;">
+          <i class="fa-solid fa-shield-halved" style="color: #0f766e; font-size: 1rem;"></i>
+          <span>HIPAA &amp; ABDM Compliant · 256-bit Encrypted Portal Session</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Universal PWA Install Modal Guide -->
+  <div id="pwaInstallModal" class="ios-install-modal hidden" role="dialog" aria-modal="true" aria-labelledby="pwaModalTitle">
+    <div class="ios-modal-box">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 2.5rem; height: 2.5rem; border-radius: 12px; background: #ccfbf1; color: #0f766e; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="fa-solid fa-mobile-screen"></i>
+          </div>
+          <div>
+            <h3 id="pwaModalTitle" style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0;">Install Pulse Predictor</h3>
+            <p style="font-size: 0.75rem; color: #64748b; margin: 0.2rem 0 0;">Fast offline access on your phone</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeInstallModal()" style="background: none; border: none; font-size: 1.25rem; color: #94a3b8; cursor: pointer;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="iosInstallSteps" class="hidden" style="font-size: 0.75rem; color: #334155; background: #f8fafc; padding: 0.85rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
+        <p style="margin: 0.35rem 0;">1. Tap the <strong>Share</strong> button <i class="fa-solid fa-arrow-up-from-bracket" style="color: #0f766e;"></i> in the Safari bottom toolbar.</p>
+        <p style="margin: 0.35rem 0;">2. Scroll down and tap <strong>Add to Home Screen</strong> (<i class="fa-regular fa-square-plus"></i>).</p>
+        <p style="margin: 0.35rem 0;">3. Tap <strong>Add</strong> in the top right corner. The app will launch in full screen!</p>
+      </div>
+
+      <div id="genericInstallSteps" style="font-size: 0.75rem; color: #334155; background: #f8fafc; padding: 0.85rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
+        <p style="margin: 0.35rem 0;">1. Tap the browser menu button <i class="fa-solid fa-ellipsis-vertical" style="color: #0f766e;"></i> in your browser toolbar.</p>
+        <p style="margin: 0.35rem 0;">2. Select <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>
+        <p style="margin: 0.35rem 0;">3. Confirm prompt. Pulse Predictor will be added to your home screen.</p>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="/" target="_blank" style="flex: 1; text-align: center; background: #0f766e; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 0.65rem 0.5rem; border-radius: 12px; text-decoration: none;">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in New Tab
+        </a>
+        <button type="button" onclick="closeInstallModal()" style="flex: 1; background: #f1f5f9; color: #334155; font-size: 0.75rem; font-weight: 700; padding: 0.65rem 0.5rem; border-radius: 12px; border: none; cursor: pointer;">
+          Got It, Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="assets/firebase-db.js"></script>
+  <script src="assets/translations.js"></script>
+  <script src="assets/login.js" defer></script>
+</body>
+</html>

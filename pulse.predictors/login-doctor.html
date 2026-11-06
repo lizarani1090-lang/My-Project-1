@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Doctor Sign In | Pulse Predictor</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0F766E">
+  <link rel="stylesheet" href="assets/login.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="login-doctor">
+  <header class="login-top-bar">
+    <button type="button" id="pwaInstallBtn" onclick="handlePWAInstall()" class="pwa-install-btn touch-target" title="Install application on phone">
+      <i class="fa-solid fa-cloud-arrow-down"></i>
+      <span>Install App</span>
+    </button>
+    <select id="languageSelector" onchange="setLanguage(this.value)" aria-label="Choose language" class="login-lang-select">
+      <option value="en">English</option>
+      <option value="hi">हिन्दी</option>
+      <option value="mr">मराठी</option>
+    </select>
+  </header>
+
+  <div class="login-shell">
+    <section class="login-visual">
+      <div class="brand-lockup">
+        <img src="logo.jpeg" alt="Pulse Predictor logo">
+        <div>
+          <strong>Pulse Predictor</strong>
+          <span>Medical Officer &amp; PHC Portal</span>
+        </div>
+      </div>
+      <div class="visual-copy">
+        <div class="eyebrow" style="color: #7dd3fc;">Doctor Workplace Portal</div>
+        <h1>Make the next clinical decision clearer.</h1>
+        <p>Review real-time teleconsultation queues, analyze AI vitals triage, issue signed e-prescriptions, and coordinate emergency referrals with secondary hospitals.</p>
+      </div>
+      <div class="visual-foot">Dedicated Clinical Workplace · Authorized medical officers only</div>
+    </section>
+
+    <main class="login-panel">
+      <section class="login-card">
+        <div class="role-chip" style="background: #e0f2fe; color: #0284c7;">
+          <span style="background: #0284c7;"></span>Doctor / PHC Workspace
+        </div>
+        <h2>Doctor Sign In</h2>
+        <p>Sign in to access your consultation queue and active clinical station.</p>
+
+        <form data-login-form data-role="doctor">
+          <label class="field">
+            <span>Doctor Identification / Email</span>
+            <input name="email" type="text" autocomplete="username" placeholder="Enter Doctor ID or Email" required>
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input name="password" type="password" autocomplete="current-password" placeholder="Enter password" required>
+          </label>
+          <button class="submit-button" type="submit" style="background: linear-gradient(120deg, #0284c7, #0369a1);">
+            Sign in as Doctor / PHC
+          </button>
+          <p class="error-message" data-login-error role="alert"></p>
+        </form>
+
+        <div style="margin-top: 1rem; padding: 0.75rem 0.9rem; background: #f0f9ff; border: 1px dashed #7dd3fc; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 0.76rem; color: #0369a1;"><i class="fa-solid fa-user-plus mr-1"></i> New Doctor or Medical Officer?</span>
+          <a href="register.html" style="font-size: 0.75rem; font-weight: 700; color: #0284c7; text-decoration: none;">Register &rarr;</a>
+        </div>
+
+        <nav class="portal-links" aria-label="Other portals">
+          <a href="login.html"><i class="fa-solid fa-arrow-left"></i> All Portals</a>
+          <a href="login-asha.html">ASHA Portal</a>
+          <a href="login-facility.html">Facility Portal</a>
+          <a href="login-patient.html">Patient Portal</a>
+        </nav>
+      </section>
+    </main>
+  </div>
+
+  <!-- Universal PWA Install Modal Guide -->
+  <div id="pwaInstallModal" class="ios-install-modal hidden" role="dialog" aria-modal="true" aria-labelledby="pwaModalTitle">
+    <div class="ios-modal-box">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 2.5rem; height: 2.5rem; border-radius: 12px; background: #ccfbf1; color: #0f766e; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="fa-solid fa-mobile-screen"></i>
+          </div>
+          <div>
+            <h3 id="pwaModalTitle" style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0;">Install Pulse Predictor</h3>
+            <p style="font-size: 0.75rem; color: #64748b; margin: 0.2rem 0 0;">Fast offline access on your phone</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeInstallModal()" style="background: none; border: none; font-size: 1.25rem; color: #94a3b8; cursor: pointer;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="iosInstallSteps" class="hidden" style="font-size: 0.75rem; color: #334155; background: #f8fafc; padding: 0.85rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
+        <p style="margin: 0.35rem 0;">1. Tap the <strong>Share</strong> button <i class="fa-solid fa-arrow-up-from-bracket" style="color: #0f766e;"></i> in the Safari bottom toolbar.</p>
+        <p style="margin: 0.35rem 0;">2. Scroll down and tap <strong>Add to Home Screen</strong> (<i class="fa-regular fa-square-plus"></i>).</p>
+        <p style="margin: 0.35rem 0;">3. Tap <strong>Add</strong> in the top right corner. The app will launch in full screen!</p>
+      </div>
+
+      <div id="genericInstallSteps" style="font-size: 0.75rem; color: #334155; background: #f8fafc; padding: 0.85rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
+        <p style="margin: 0.35rem 0;">1. Tap the browser menu button <i class="fa-solid fa-ellipsis-vertical" style="color: #0f766e;"></i> in your browser toolbar.</p>
+        <p style="margin: 0.35rem 0;">2. Select <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>
+        <p style="margin: 0.35rem 0;">3. Confirm prompt. Pulse Predictor will be added to your home screen.</p>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="/" target="_blank" style="flex: 1; text-align: center; background: #0f766e; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 0.65rem 0.5rem; border-radius: 12px; text-decoration: none;">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in New Tab
+        </a>
+        <button type="button" onclick="closeInstallModal()" style="flex: 1; background: #f1f5f9; color: #334155; font-size: 0.75rem; font-weight: 700; padding: 0.65rem 0.5rem; border-radius: 12px; border: none; cursor: pointer;">
+          Got It, Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="assets/firebase-db.js"></script>
+  <script src="assets/translations.js"></script>
+  <script src="assets/login.js" defer></script>
+</body>
+</html>

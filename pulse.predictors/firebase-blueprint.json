@@ -1,0 +1,137 @@
+{
+  "entities": {
+    "TriageCase": {
+      "title": "Triage Case",
+      "description": "Clinical digital triage recorded by ASHA workers in rural communities.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "patientName": { "type": "string" },
+        "abhaId": { "type": "string" },
+        "symptoms": { "type": "string" },
+        "bloodPressure": { "type": "string" },
+        "pulseRate": { "type": "string" },
+        "spo2": { "type": "string" },
+        "riskScore": { "type": "number" },
+        "riskLevel": { "type": "string", "enum": ["HIGH", "MODERATE", "LOW"] },
+        "status": { "type": "string", "enum": ["pending", "reviewed", "referred", "resolved"] },
+        "ashaName": { "type": "string" },
+        "subCentre": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["patientName", "riskScore", "riskLevel", "status", "createdAt"]
+    },
+    "InventoryItem": {
+      "title": "Inventory Item",
+      "description": "Essential medicine or clinical resource stock tracking.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["medicine", "equipment", "bed", "oxygen"] },
+        "quantity": { "type": "number" },
+        "unit": { "type": "string" },
+        "threshold": { "type": "number" },
+        "status": { "type": "string", "enum": ["available", "low_stock", "out_of_stock"] },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["name", "quantity", "status"]
+    },
+    "Referral": {
+      "title": "Emergency Referral",
+      "description": "Inter-facility transfer and ambulance transit coordination.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "patientName": { "type": "string" },
+        "sourceFacility": { "type": "string" },
+        "targetFacility": { "type": "string" },
+        "priority": { "type": "string", "enum": ["CRITICAL", "URGENT", "ROUTINE"] },
+        "transportStatus": { "type": "string", "enum": ["dispatched", "in_transit", "arrived"] },
+        "ambulanceNumber": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["patientName", "sourceFacility", "targetFacility", "priority", "transportStatus"]
+    },
+    "Consultation": {
+      "title": "Clinical Consultation",
+      "description": "Teleconsultation session between patient/ASHA and PHC Doctor.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "patientName": { "type": "string" },
+        "doctorName": { "type": "string" },
+        "tokenNumber": { "type": "string" },
+        "scheduledTime": { "type": "string" },
+        "status": { "type": "string", "enum": ["waiting", "in_call", "completed"] },
+        "prescription": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["patientName", "status", "tokenNumber"]
+    },
+    "UserAccount": {
+      "title": "User Account Profile",
+      "description": "Registered account profile for multi-workspace access with verified Google authentication.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["asha", "doctor", "facility", "patient"] },
+        "workplace": { "type": "string" },
+        "phone": { "type": "string" },
+        "abhaId": { "type": "string" },
+        "licenseNumber": { "type": "string" },
+        "isGoogleVerified": { "type": "boolean" },
+        "googleUid": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "authProvider": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "email", "role", "createdAt"]
+    },
+    "VideoCall": {
+      "title": "Live WebRTC Video Call",
+      "description": "Real-time peer-to-peer clinical teleconsultation session between ASHA worker and PHC Doctor.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "callerRole": { "type": "string", "enum": ["asha", "doctor", "patient"] },
+        "callerName": { "type": "string" },
+        "patientName": { "type": "string" },
+        "status": { "type": "string", "enum": ["calling", "connected", "ended"] },
+        "offer": { "type": "object" },
+        "answer": { "type": "object" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["callerRole", "status", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserAccount",
+      "description": "Registered user accounts for ASHA, Doctor, Facility Admin, and Patient portals."
+    },
+    "/triage_cases/{triageId}": {
+      "schema": "TriageCase",
+      "description": "Collection of digital triage assessments submitted across sub-centres."
+    },
+    "/inventory/{itemId}": {
+      "schema": "InventoryItem",
+      "description": "Pharmacy stock, oxygen reserve, and bed capacity records."
+    },
+    "/referrals/{referralId}": {
+      "schema": "Referral",
+      "description": "Live referral tracking pipeline with ambulance dispatch data."
+    },
+    "/consultations/{consultationId}": {
+      "schema": "Consultation",
+      "description": "Teleconsultation appointments, consultation notes, and e-prescriptions."
+    },
+    "/video_calls/{callId}": {
+      "schema": "VideoCall",
+      "description": "Live WebRTC video calling signaling session and status."
+    }
+  }
+}

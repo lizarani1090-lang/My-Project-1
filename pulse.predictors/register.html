@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Register Account | Pulse Predictor</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0F766E">
+  <link rel="stylesheet" href="assets/login.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="login-home">
+  <header class="login-top-bar">
+    <button type="button" id="pwaInstallBtn" onclick="handlePWAInstall()" class="pwa-install-btn touch-target" title="Install application on phone">
+      <i class="fa-solid fa-cloud-arrow-down"></i>
+      <span>Install App</span>
+    </button>
+    <select id="languageSelector" onchange="setLanguage(this.value)" aria-label="Choose language" class="login-lang-select">
+      <option value="en">English</option>
+      <option value="hi">हिन्दी</option>
+      <option value="mr">मराठी</option>
+    </select>
+  </header>
+
+  <div class="login-shell">
+    <section class="login-visual">
+      <div class="brand-lockup">
+        <img src="logo.jpeg" alt="Pulse Predictor logo">
+        <div>
+          <strong>Pulse Predictor</strong>
+          <span>Rural Health Access &amp; Quality Platform</span>
+        </div>
+      </div>
+      <div class="visual-copy">
+        <div class="eyebrow">Universal Access · All 4 Workplaces</div>
+        <h1>Join the coordinated health network.</h1>
+        <p>Whether you are an ASHA frontline worker in a village, a PHC doctor providing teleconsultations, a hospital administrator coordinating bed capacity, or a rural patient seeking quality care — register your account to begin immediately.</p>
+      </div>
+      <div class="visual-foot">HIPAA &amp; ABDM Compliant · 256-bit Encrypted Portal Session</div>
+    </section>
+
+    <main class="login-panel">
+      <section class="login-card">
+        <div class="role-chip"><span></span>Universal Workspace Registration</div>
+        <h2>Create Account</h2>
+        <p>Select your authorized workspace and enter your profile details.</p>
+
+        <!-- Form for Registration -->
+        <form data-register-form id="registerForm">
+          <label class="field">
+            <span>Select Workspace / Role</span>
+            <div class="role-select-grid">
+              <label class="role-radio-label">
+                <input type="radio" name="role" value="asha" checked onchange="updateRoleFields('asha')">
+                <span><i class="fa-solid fa-user-nurse text-emerald-600 mr-1"></i> ASHA</span>
+              </label>
+              <label class="role-radio-label">
+                <input type="radio" name="role" value="doctor" onchange="updateRoleFields('doctor')">
+                <span><i class="fa-solid fa-user-doctor text-sky-600 mr-1"></i> Doctor / PHC</span>
+              </label>
+              <label class="role-radio-label">
+                <input type="radio" name="role" value="facility" onchange="updateRoleFields('facility')">
+                <span><i class="fa-solid fa-hospital text-amber-600 mr-1"></i> Facility Admin</span>
+              </label>
+              <label class="role-radio-label">
+                <input type="radio" name="role" value="patient" onchange="updateRoleFields('patient')">
+                <span><i class="fa-solid fa-user text-indigo-600 mr-1"></i> Patient</span>
+              </label>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>Full Name</span>
+            <input name="name" type="text" placeholder="e.g. Dr. Ananya Sharma or Sunita Devi" required>
+          </label>
+
+          <label class="field">
+            <span>Official Email / Login ID</span>
+            <input name="email" type="email" placeholder="e.g. ananya@phc.in or user@pulse.in" required>
+          </label>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <label class="field">
+              <span>Mobile Phone</span>
+              <input name="phone" type="tel" placeholder="e.g. +91 98765 43210">
+            </label>
+            <label class="field" id="workplaceField">
+              <span id="workplaceLabel">Sub-Centre / Facility</span>
+              <input name="workplace" id="workplaceInput" type="text" placeholder="e.g. Sub-Centre 4 / PHC Rampur">
+            </label>
+          </div>
+
+          <!-- Dynamic Role-Specific Identifier Field -->
+          <div id="roleSpecificIdContainer">
+            <label class="field" id="idFieldWrapper">
+              <span id="idFieldLabel">Government ASHA Registration ID</span>
+              <input name="licenseNumber" id="idFieldInput" type="text" placeholder="e.g. ASHA-MH-2024-8812">
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Password</span>
+            <input name="password" type="password" placeholder="Create a secure password (min 4 characters)" minlength="4" required>
+          </label>
+
+          <button class="submit-button" type="submit">
+            Create Account &amp; Enter Workspace
+          </button>
+
+          <p class="error-message" data-register-error role="alert"></p>
+          <div class="success-message" data-register-success style="display: none;"></div>
+        </form>
+
+        <div style="margin-top: 1.25rem; text-align: center; font-size: 0.82rem; color: #526778;">
+          Already have an account? <a href="login.html" style="color: var(--brand-dark); font-weight: 700; text-decoration: none;">Sign in here</a>
+        </div>
+
+        <nav class="portal-links" aria-label="Other portals" style="margin-top: 1rem; justify-content: center;">
+          <a href="login.html"><i class="fa-solid fa-arrow-left"></i> All Portals</a>
+          <a href="login-asha.html">ASHA Portal</a>
+          <a href="login-doctor.html">Doctor Portal</a>
+          <a href="login-facility.html">Facility Portal</a>
+          <a href="login-patient.html">Patient Portal</a>
+        </nav>
+      </section>
+    </main>
+  </div>
+
+  <!-- Universal PWA Install Modal Guide -->
+  <div id="pwaInstallModal" class="ios-install-modal hidden" role="dialog" aria-modal="true" aria-labelledby="pwaModalTitle">
+    <div class="ios-modal-box">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 2.5rem; height: 2.5rem; border-radius: 12px; background: #ccfbf1; color: #0f766e; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="fa-solid fa-mobile-screen"></i>
+          </div>
+          <div>
+            <h3 id="pwaModalTitle" style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0;">Install Pulse Predictor</h3>
+            <p style="font-size: 0.75rem; color: #64748b; margin: 0.2rem 0 0;">Fast offline access on your phone</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeInstallModal()" style="background: none; border: none; font-size: 1.25rem; color: #94a3b8; cursor: pointer;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="iosInstallSteps" class="hidden" style="font-size: 0.75rem; color: #334155; background: #f8fafc; padding: 0.85rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
+        <p style="margin: 0.35rem 0;">1. Tap the <strong>Share</strong> button in Safari.</p>
+        <p style="margin: 0.35rem 0;">2. Select <strong>Add to Home Screen</strong>.</p>
+      </div>
+
+      <div id="genericInstallSteps" style="font-size: 0.75rem; color: #334155; background: #f8fafc; padding: 0.85rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
+        <p style="margin: 0.35rem 0;">1. Open your browser menu.</p>
+        <p style="margin: 0.35rem 0;">2. Select <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="button" onclick="closeInstallModal()" style="flex: 1; background: #f1f5f9; color: #334155; font-size: 0.75rem; font-weight: 700; padding: 0.65rem 0.5rem; border-radius: 12px; border: none; cursor: pointer;">
+          Got It, Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function updateRoleFields(role) {
+      const workplaceLabel = document.getElementById('workplaceLabel');
+      const workplaceInput = document.getElementById('workplaceInput');
+      const idFieldLabel = document.getElementById('idFieldLabel');
+      const idFieldInput = document.getElementById('idFieldInput');
+
+      if (role === 'asha') {
+        workplaceLabel.textContent = 'Assigned Sub-Centre / Ward';
+        workplaceInput.placeholder = 'e.g. Sub-Centre 4, Ward 4';
+        idFieldLabel.textContent = 'Government ASHA ID';
+        idFieldInput.placeholder = 'e.g. ASHA-MH-2024-8812';
+        idFieldInput.name = 'licenseNumber';
+      } else if (role === 'doctor') {
+        workplaceLabel.textContent = 'Assigned PHC / Clinic';
+        workplaceInput.placeholder = 'e.g. PHC Ward 4 Clinic';
+        idFieldLabel.textContent = 'Medical Council Registration (MCI/NMC)';
+        idFieldInput.placeholder = 'e.g. MCI-987452-MH';
+        idFieldInput.name = 'licenseNumber';
+      } else if (role === 'facility') {
+        workplaceLabel.textContent = 'Facility / Hospital Unit';
+        workplaceInput.placeholder = 'e.g. District Hospital Logistics Hub';
+        idFieldLabel.textContent = 'Facility Admin License / ID';
+        idFieldInput.placeholder = 'e.g. HOSP-ADMIN-04';
+        idFieldInput.name = 'licenseNumber';
+      } else if (role === 'patient') {
+        workplaceLabel.textContent = 'Village / Residential Locality';
+        workplaceInput.placeholder = 'e.g. Rampur Village, Sector 3';
+        idFieldLabel.textContent = 'ABHA Health ID (Optional)';
+        idFieldInput.placeholder = 'e.g. 14-8899-2345-6712';
+        idFieldInput.name = 'abhaId';
+      }
+    }
+  </script>
+  <script type="module" src="assets/firebase-db.js"></script>
+  <script src="assets/translations.js"></script>
+  <script src="assets/login.js" defer></script>
+</body>
+</html>
